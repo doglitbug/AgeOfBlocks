@@ -3,11 +3,9 @@
 #include <glm/vec3.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/ext/matrix_clip_space.hpp>
 
 #include <fstream>
 #include <string>
-#include <iostream>
 #include <sstream>
 
 #include "App.h"
@@ -16,7 +14,7 @@ bool readFileToString(const std::string &filePath, std::string &output)
     std::ifstream inputFile(filePath, std::ios::in | std::ios::binary);
     if (!inputFile.is_open())
     {
-        std::cerr << "Unable to open file" << std::endl;
+        SDL_Log("Unable to open file");
         return false;
     }
     std::ostringstream streamBuffer;
@@ -24,11 +22,11 @@ bool readFileToString(const std::string &filePath, std::string &output)
     output = streamBuffer.str();
     return true;
 }
-void App::onNotify(const std::string &message, MyType newValue)
+void App::onNotify(const std::string &message, const MyType newValue)
 {
     if (message == "RESOLUTION")
     {
-        glm::ivec2 screenResolution = std::get<glm::ivec2>(newValue);
+        const glm::ivec2 screenResolution = std::get<glm::ivec2>(newValue);
         // TODO Store fov, near and far as variables?
         mCamera.setPerspective(45.0f, screenResolution.x, screenResolution.y, 0.1f, 100.0f);
         glViewport(0, 0, screenResolution.x, screenResolution.y);
@@ -41,7 +39,7 @@ void App::init()
     // Attempt to initialize SDL
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     {
-        std::cerr << "SDL Init fail" << std::endl;
+        SDL_Log("SDL Init fail");
         exit(1);
     }
 
@@ -50,12 +48,12 @@ void App::init()
     if (m_pSettings->getFullScreen())
         flags |= SDL_WINDOW_FULLSCREEN;
 
-    glm::ivec2 screenResolution = App::getSettings()->getResolution(); // Used in OPENGL further down
+    const glm::ivec2 screenResolution = App::getSettings()->getResolution(); // Used in OPENGL further down
 
     m_pWindow = SDL_CreateWindow("Age of Blocks", screenResolution.x, screenResolution.y, flags);
     if (m_pWindow == nullptr)
     {
-        std::cerr << "Window Creation Error: " << SDL_GetError() << std::endl;
+       SDL_Log("Window Creation Error: %s", SDL_GetError());
         exit(1);
     }
 
@@ -66,13 +64,13 @@ void App::init()
 
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-    SDL_GLContext glContext = SDL_GL_CreateContext(m_pWindow);
+    glContext = SDL_GL_CreateContext(m_pWindow);
     SDL_GL_MakeCurrent(m_pWindow, glContext);
 
     if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
     {
-        std::cerr << "Failed to link OpenGL extensions via GLAD" << std::endl;
-        exit(-1);
+        SDL_Log("Failed to link OpenGL extensions via GLAD");
+        exit(1);
     }
 
     // TODO Get an observer for screen res changing and reset these two lines
@@ -89,25 +87,13 @@ void App::init()
     meh.LoadMesh("assets/models/villager.gltf");
 
     // Only look this up once and save!
-    gTranslateLocation = glGetUniformLocation(shaderProgram, "gTranslate");
-    if (gTranslateLocation == -1)
-    {
-        std::cerr << "Failed to find gTranslate" << std::endl;
-    }
+    gTranslateLocation = m_3dShaderProgram.getUniformLocation("gTranslate");
 
     // Set up Camera
-    gCameraLocation = glGetUniformLocation(shaderProgram, "gCamera");
-    if (gCameraLocation == -1)
-    {
-        std::cerr << "Failed to find gCamera" << std::endl;
-    }
+    gCameraLocation = m_3dShaderProgram.getUniformLocation("gCamera");
 
     // Texture Sampler
-    gSamplerLocation = glGetUniformLocation(shaderProgram, "gSampler");
-    if (gSamplerLocation == -1)
-    {
-        std::cerr << "Failed to find gSampler" << std::endl;
-    }
+    gSamplerLocation = m_3dShaderProgram.getUniformLocation( "gSampler");
 
     // Create input subsystem
     m_pInput = new InputSystem();
@@ -129,7 +115,7 @@ void App::render()
     SDL_GL_SwapWindow(m_pWindow);
 }
 
-void App::update(float deltaTime)
+void App::update(const float deltaTime)
 {
     gScale += deltaTime;
 
@@ -157,22 +143,13 @@ void App::toggleMouseLock()
 
 App::~App()
 {
-    glDeleteProgram(shaderProgram);
-
     SDL_GL_DestroyContext(glContext);
     SDL_DestroyWindow(m_pWindow);
     SDL_Quit();
 }
 void App::CompileShaders()
 {
-    shaderProgram = glCreateProgram();
-
-    if (shaderProgram == 0)
-    {
-        fprintf(stderr, "Error creating shader program\n");
-        exit(1);
-    }
-
+    m_3dShaderProgram.init();
     std::string vs, fs;
 
     if (!readFileToString("src/World/shaders/vertex.glsl", vs))
@@ -180,41 +157,21 @@ void App::CompileShaders()
         exit(1);
     };
 
-    AddShader(shaderProgram, vs.c_str(), GL_VERTEX_SHADER);
+    m_3dShaderProgram.addShader(GL_VERTEX_SHADER, vs.c_str() );
 
     if (!readFileToString("src/World/shaders/fragment.glsl", fs))
     {
         exit(1);
     };
 
-    AddShader(shaderProgram, fs.c_str(), GL_FRAGMENT_SHADER);
+    m_3dShaderProgram.addShader(GL_FRAGMENT_SHADER, fs.c_str() );
 
-    GLint Success = 0;
-    GLchar ErrorLog[1024] = {0};
-
-    glLinkProgram(shaderProgram);
-
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &Success);
-    if (Success == 0)
-    {
-        glGetProgramInfoLog(shaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
-        exit(1);
-    }
-
-    glValidateProgram(shaderProgram);
-    glGetProgramiv(shaderProgram, GL_VALIDATE_STATUS, &Success);
-    if (!Success)
-    {
-        glGetProgramInfoLog(shaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
-        exit(1);
-    }
-
-    glUseProgram(shaderProgram);
+    m_3dShaderProgram.finalise();
 }
-void App::RenderScene()
+
+void App::RenderScene() const
 {
+    m_3dShaderProgram.enable();
     // Send the camera stuff to the GPU
     auto cameraMatrix = mCamera.getViewMatrix();
     glUniformMatrix4fv(gCameraLocation, 1, GL_FALSE, glm::value_ptr(cameraMatrix));
@@ -224,39 +181,9 @@ void App::RenderScene()
     identity = glm::scale(identity, glm::vec3(1.0f, 1.0f, 1.0f));
     glUniformMatrix4fv(gTranslateLocation, 1, GL_FALSE, glm::value_ptr(identity));
 
+    //Send color info to GPU
+
     meh.Render(1);
-}
 
-void App::AddShader(GLuint ShaderProgram, const char *pShaderText, GLenum ShaderType)
-{
-    GLuint ShaderObj = glCreateShader(ShaderType);
-
-    if (ShaderObj == 0)
-    {
-        fprintf(stderr, "Error creating shader type %d\n", ShaderType);
-        exit(1);
-    }
-
-    const GLchar *p[1];
-    p[0] = pShaderText;
-
-    GLint Lengths[1];
-    Lengths[0] = (GLint)strlen(pShaderText);
-
-    glShaderSource(ShaderObj, 1, p, Lengths);
-
-    glCompileShader(ShaderObj);
-
-    GLint success;
-    glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &success);
-
-    if (!success)
-    {
-        GLchar InfoLog[1024];
-        glGetShaderInfoLog(ShaderObj, 1024, NULL, InfoLog);
-        fprintf(stderr, "Error compiling shader type %d: '%s'\n", ShaderType, InfoLog);
-        exit(1);
-    }
-
-    glAttachShader(ShaderProgram, ShaderObj);
+    // TODO switch to 2d shader program and render GUI (or put in another function)
 }

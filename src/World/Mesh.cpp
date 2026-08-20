@@ -1,8 +1,11 @@
 #include "Mesh.h"
 
+#include <assimp/postprocess.h>
+
 #include <iostream>
 #include <filesystem>
 #define DEBUG(x) std::cout << "Debug: " << x << std::endl;
+
 bool Mesh::LoadMesh(const std::string &filename)
 {
     glGenVertexArrays(1, &m_VAO);
@@ -28,7 +31,7 @@ bool Mesh::LoadMesh(const std::string &filename)
     return true;
 }
 
-void Mesh::Render(unsigned int meshIndex)
+void Mesh::Render(const unsigned int meshIndex) const
 {
     // TODO If meshIndex = -1, render all?
     glBindVertexArray(m_VAO);
@@ -101,12 +104,12 @@ void Mesh::LoadMesh(const aiMesh *paiMesh)
     for (unsigned int i = 0; i < paiMesh->mNumVertices; i++)
     {
         const aiVector3D &pPos = paiMesh->mVertices[i];
-        const aiVector3D &ptextureCoords = paiMesh->HasTextureCoords(0) ? paiMesh->mTextureCoords[0][i] : aiVector3D(0.0f, 0.0f, 0.0f);
+        const aiVector3D &pTextureCoords = paiMesh->HasTextureCoords(0) ? paiMesh->mTextureCoords[0][i] : aiVector3D(0.0f, 0.0f, 0.0f);
         const aiVector3D &pNormal = paiMesh->mNormals[i];//TODO Set to 0,1,0 if not present?
 
-        m_positions.push_back(glm::vec3(pPos.x, pPos.y, pPos.z));
-        m_textureCoords.push_back(glm::vec2(ptextureCoords.x, ptextureCoords.y));
-        m_normals.push_back(glm::vec3(pNormal.x, pNormal.y, pNormal.z));
+        m_positions.emplace_back(pPos.x, pPos.y, pPos.z);
+        m_textureCoords.emplace_back(pTextureCoords.x, pTextureCoords.y);
+        m_normals.emplace_back(pNormal.x, pNormal.y, pNormal.z);
     }
 
     // Populate the index buffer

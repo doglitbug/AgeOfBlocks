@@ -12,7 +12,7 @@ public:
     ~Camera() = default;
 
     void setPerspective(float fov, int screenWidth, int screenHeight, float near, float far);
-    glm::mat4 getViewMatrix();
+    glm::mat4 getViewMatrix() const;
 
     /// @brief Move the camera along the x/y axis.
     ///        Of course, if we were a RTS camera, it would be x/z axis!

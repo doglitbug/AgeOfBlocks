@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
 project(AgeOfBlocks VERSION 0.0.1 LANGUAGES C CXX)
 
-# Force C++17 standard
-set(CMAKE_CXX_STANDARD 17)
+# Force C++20 standard
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 

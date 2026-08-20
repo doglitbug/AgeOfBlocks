@@ -1,8 +1,8 @@
 #pragma once
 
-#include <SDL3/SDL_rect.h>
 #include <variant>
 #include <string>
+#include <algorithm>
 #include <glm/glm.hpp>
 
 using MyType = std::variant<int, float, bool, glm::ivec2>;
@@ -17,7 +17,24 @@ class ISubject
 {
 public:
     virtual ~ISubject() = default;
-    virtual void addObserver(IObserver *observer) = 0;
-    virtual void removeObserver(IObserver *observer) = 0;
-    virtual void notifyObservers(const std::string &message, MyType newValue) = 0;
+    virtual void addObserver(IObserver *observer)
+    {
+        observers.push_back(observer);
+    };
+    virtual void removeObserver(IObserver *observer)
+    {
+        std::erase(observers, observer);
+    };
+    virtual void notifyObservers(const std::string &message, const MyType newValue)
+    {
+        for (IObserver *observer : observers)
+        {
+            if (observer)
+            {
+                observer->onNotify(message, newValue); // Synchronous broadcast
+            }
+        }
+    };
+
+    std::vector<IObserver *> observers;
 };

@@ -4,7 +4,6 @@
 #include <glm/glm.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
-#include <assimp/postprocess.h>
 
 #include <string>
 
@@ -38,7 +37,7 @@ public:
     ~Mesh() = default;
 
     bool LoadMesh(const std::string &filename);
-    void Render(unsigned int meshIndex);
+    void Render(unsigned int meshIndex) const;
 
 private:
     struct InternalMesh

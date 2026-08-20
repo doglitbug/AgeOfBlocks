@@ -7,6 +7,7 @@
 #include "InputSystem.h"
 #include "Camera.h"
 #include "Mesh.h"
+#include "ShaderProgram.h"
 
 #define HELLO std::cout << "Hello" << std::endl;
 class App : public IObserver
@@ -22,7 +23,7 @@ public:
     App(App &other) = delete;
     void operator=(const App &) = delete;
 
-    void onNotify(const std::string &message, MyType newValue);
+    void onNotify(const std::string &message, MyType newValue) override;
 
     void init();
     void render();
@@ -30,19 +31,18 @@ public:
     void handleEvents();
 
     void toggleMouseLock();
-    bool running() { return m_bRunning; }
+    bool running() const { return m_bRunning; }
     void quit() { m_bRunning = false; }
 
-    Settings *getSettings() { return m_pSettings; }
-    InputSystem *getInput() { return m_pInput; }
+    Settings *getSettings() const { return m_pSettings; }
+    InputSystem *getInput() const { return m_pInput; }
 
 private:
     App() = default;
     ~App();
 
-    void AddShader(GLuint ShaderProgram, const char *pShaderText, GLenum ShaderType);
     void CompileShaders();
-    void RenderScene();
+    void RenderScene() const;
 
     SDL_Window *m_pWindow;
     Settings *m_pSettings;
@@ -51,11 +51,11 @@ private:
 
     SDL_GLContext glContext;
 
-    GLuint shaderProgram;
-    GLuint gTranslateLocation;
-    GLuint gCameraLocation;
+    ShaderProgram m_3dShaderProgram;
+    GLint gTranslateLocation;
+    GLint gCameraLocation;
+    GLint gSamplerLocation;
 
-    GLuint gSamplerLocation;
     Texture *pTexture;
 
     float gScale = 0.0f;

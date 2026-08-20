@@ -1,7 +1,4 @@
 #pragma once
-#include <variant>
-#include <string>
-#include <vector>
 #include "../Observers.h"
 #include <SDL3/SDL.h>
 
@@ -48,11 +45,6 @@ public:
     Settings();
     ~Settings() = default;
 
-    // Observers
-    void addObserver(IObserver *observer);
-    void removeObserver(IObserver *observer);
-    void notifyObservers(const std::string &message, MyType newValue);
-
     void load();
     void save();
     void reset();
@@ -75,7 +67,7 @@ public:
     bool getFullScreen() const;
     void setFullScreen(bool enabled);
     void setResolution(int width, int height);
-    glm::ivec2 getResolution();
+    glm::ivec2 getResolution() const;
 
     // Input
     /// @see https://wiki.libsdl.org/SDL3/SDL_Scancode
@@ -103,5 +95,4 @@ public:
         SDL_GAMEPAD_BUTTON_NORTH};
 private:
     settings m_settings{};
-    std::vector<IObserver *> observers;
 };

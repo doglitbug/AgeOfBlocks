@@ -6,35 +6,35 @@
 
 Camera::Camera()
 {
-    mPosition = glm::vec3(0.0f, 0.0f, 5.0f);
+    mPosition = glm::vec3(0.0f, 1.5f, 5.0f);
     mDirection = glm::vec3(0.0f, 0.0f, -1.0f);//Not important for starting value
     mUp = glm::vec3(0.0f, 1.0f, 0.0f);
     pitch = 0.0f;
     yaw = -90.0f; // Looking down Z axis
 }
 
-void Camera::setPerspective(float fov, int screenWidth, int screenHeight, float near, float far)
+void Camera::setPerspective(const float fov, const int screenWidth, const int screenHeight, const float near, const float far)
 {
     mPerspective = glm::perspectiveFov(glm::radians(fov),
-                                       (float)screenWidth,
-                                       (float)screenHeight,
+                                       static_cast<float>(screenWidth),
+                                       static_cast<float>(screenHeight),
                                        near,
                                        far);
 }
 
-glm::mat4 Camera::getViewMatrix()
+glm::mat4 Camera::getViewMatrix() const
 {
     return mPerspective * glm::lookAt(mPosition, mPosition + mDirection, mUp);
 }
 
-void Camera::Move(glm::vec2 movement)
+void Camera::Move(const glm::vec2 movement)
 {
     // Lets do forward/backward movement. Ignore the up/down so that we walk along the ground (instead of flying)
     // TODO Dont ignore if flying
     mPosition -= glm::vec3(mDirection.x, 0.0f, mDirection.z) * movement.y;
 
-    // Lets do strafing!
-    glm::vec3 rightVector = glm::cross(mDirection, mUp);
+    // Let's do strafing!
+    const glm::vec3 rightVector = glm::cross(mDirection, mUp);
     mPosition += rightVector * movement.x;
 }
 

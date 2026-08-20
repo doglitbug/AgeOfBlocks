@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <algorithm>
 
 #include "Settings.h"
 #include "App.h"
@@ -71,29 +70,6 @@ void Settings::reset()
     // TODO Will probably need a dedicated function for resetting keybindings?
 }
 
-// region observers
-void Settings::addObserver(IObserver *observer)
-{
-    observers.push_back(observer);
-}
-
-void Settings::removeObserver(IObserver *observer)
-{
-    observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
-}
-
-void Settings::notifyObservers(const std::string &message, MyType newValue)
-{
-    for (IObserver *observer : observers)
-    {
-        if (observer)
-        {
-            observer->onNotify(message, newValue); // Synchronous broadcast
-        }
-    }
-}
-// endregion
-
 // region Audio
 bool Settings::getTitleMusicEnabled() const { return m_settings.titleMusicEnabled; }
 void Settings::setTitleMusicEnabled(const bool enabled)
@@ -135,15 +111,15 @@ bool Settings::getFullScreen() const { return m_settings.fullScreen; };
 void Settings::setFullScreen(const bool enabled)
 {
     m_settings.fullScreen = enabled;
-    notifyObservers("FULLSCREEN", enabled);
+    notifyObservers("FULLSCREEN_ENABLED", enabled);
 }
-void Settings::setResolution(int width, int height)
+void Settings::setResolution(const int width, const int height)
 {
     m_settings.screenWidth = width;
     m_settings.screenHeight = height;
     notifyObservers("RESOLUTION", getResolution());
 }
-glm::ivec2 Settings::getResolution()
+glm::ivec2 Settings::getResolution() const
 {
     return glm::ivec2{m_settings.screenWidth, m_settings.screenHeight};
 };
