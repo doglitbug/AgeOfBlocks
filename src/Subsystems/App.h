@@ -47,7 +47,7 @@ private:
     SDL_Window *m_pWindow;
     Settings *m_pSettings;
     InputSystem *m_pInput;
-    Camera mCamera;
+    Camera mCamera{};
 
     SDL_GLContext glContext;
 
@@ -58,12 +58,8 @@ private:
 
     Texture *pTexture;
 
-    float gScale = 0.0f;
-    glm::mat4 gTranslate;
-    glm::mat4 gPerspective;
-    float gDelta = 0.5f;
     bool m_bRunning;
     bool m_mouseLocked;
 
-    Mesh meh;
+    Mesh m_playerObject;
 };

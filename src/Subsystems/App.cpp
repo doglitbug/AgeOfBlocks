@@ -83,7 +83,7 @@ void App::init()
 
     CompileShaders();
 
-    meh.LoadMesh("assets/models/villager.gltf");
+    m_playerObject.LoadMesh("assets/models/villager.gltf");
 
     // Only look this up once and save!
     gTranslateLocation = m_3dShaderProgram.getUniformLocation("gTranslate");
@@ -116,9 +116,7 @@ void App::render() const
 
 void App::update(const float deltaTime)
 {
-    gScale += deltaTime;
-
-    meh.m_rotation.y += deltaTime * 100;
+    m_playerObject.m_rotation.y += deltaTime * 100;
 
     m_pInput->update();
     // Do Camera movement, later on this will be moving a player object that the camera is attached to
@@ -178,8 +176,8 @@ void App::RenderScene() const
 
     // Send the translation info to the GPU
     // TODO Move to objects render?
-    glUniformMatrix4fv(gTranslateLocation, 1, GL_FALSE, glm::value_ptr(meh.GetWorldMatrix()));
-    meh.Render(1);
+    glUniformMatrix4fv(gTranslateLocation, 1, GL_FALSE, glm::value_ptr(m_playerObject.GetWorldMatrix()));
+    m_playerObject.Render(1);
 
     // TODO switch to 2d shader program and render GUI (or put in another function)
 }
