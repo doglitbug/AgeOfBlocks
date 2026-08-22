@@ -33,12 +33,18 @@ enum BUFFER_TYPE
 class Mesh
 {
 public:
-    Mesh() = default;
+    Mesh();
     ~Mesh() = default;
 
     bool LoadMesh(const std::string &filename);
     void Render(unsigned int meshIndex) const;
 
+    // TODO move back to private and add accessor methods
+    glm::vec3 m_position;
+    glm::vec3 m_rotation;
+    float m_scale;
+
+    glm::mat4 GetWorldMatrix() const;
 private:
     struct InternalMesh
     {
@@ -70,6 +76,8 @@ private:
     std::vector<glm::vec3> m_positions;
     std::vector<glm::vec2> m_textureCoords;
     std::vector<glm::vec3> m_normals;
+
+
 
     void checkOpenGLError(const std::string& location);
 };

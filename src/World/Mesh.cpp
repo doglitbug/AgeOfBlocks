@@ -4,7 +4,19 @@
 
 #include <iostream>
 #include <filesystem>
+
+#include "glm/detail/type_quat.hpp"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/gtc/quaternion.hpp"
+
 #define DEBUG(x) std::cout << "Debug: " << x << std::endl;
+
+Mesh::Mesh()
+{
+    m_position = glm::vec3(0.0f, 0.0f, 0.0f);
+    m_rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+    m_scale = 1.0f;
+}
 
 bool Mesh::LoadMesh(const std::string &filename)
 {
@@ -49,6 +61,14 @@ void Mesh::Render(const unsigned int meshIndex) const
                              m_meshes[i].startingVertex);
 
     glBindVertexArray(0);
+}
+
+glm::mat4 Mesh::GetWorldMatrix() const
+{
+    auto translation = glm::translate(glm::mat4(1.0f),m_position);
+    auto rotation = glm::mat4_cast(glm::quat(glm::radians(m_rotation)));
+
+    return translation * rotation * m_scale;
 }
 
 void Mesh::LoadFromScene(const aiScene *pScene, const std::string &filename)

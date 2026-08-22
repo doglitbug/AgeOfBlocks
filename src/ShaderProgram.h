@@ -25,9 +25,9 @@ private:
     GLuint m_shaderProgram{};
     std::vector<GLuint> m_shaders;
 
+    // Ambient color information
     glm::vec3 m_ambientColor=glm::vec3(0.9f, 0.95f, 1.0f);
     float m_ambientIntensity=0.8f;
-
     GLint m_ambientColorLocation{};
     GLint m_ambientIntensityLocation{};
 };

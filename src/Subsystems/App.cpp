@@ -2,7 +2,6 @@
 #include <glad/glad.h>
 #include <glm/vec3.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 #include <fstream>
 #include <string>
@@ -107,7 +106,7 @@ void App::init()
     m_bRunning = true;
 }
 
-void App::render()
+void App::render() const
 {
     glClearColor(0.15f, 0.15f, 0.18f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -119,8 +118,9 @@ void App::update(const float deltaTime)
 {
     gScale += deltaTime;
 
-    m_pInput->update();
+    meh.m_rotation.y += deltaTime * 100;
 
+    m_pInput->update();
     // Do Camera movement, later on this will be moving a player object that the camera is attached to
     mCamera.Move(m_pInput->getMovement() * deltaTime * 10.0f);
     // TODO Mouse movement would need to rotate the player object too.
@@ -177,12 +177,8 @@ void App::RenderScene() const
     glUniformMatrix4fv(gCameraLocation, 1, GL_FALSE, glm::value_ptr(cameraMatrix));
 
     // Send the translation info to the GPU
-    auto identity = glm::mat4(1.0f);
-    identity = glm::scale(identity, glm::vec3(1.0f, 1.0f, 1.0f));
-    glUniformMatrix4fv(gTranslateLocation, 1, GL_FALSE, glm::value_ptr(identity));
-
-    //Send color info to GPU
-
+    // TODO Move to objects render?
+    glUniformMatrix4fv(gTranslateLocation, 1, GL_FALSE, glm::value_ptr(meh.GetWorldMatrix()));
     meh.Render(1);
 
     // TODO switch to 2d shader program and render GUI (or put in another function)

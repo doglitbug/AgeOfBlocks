@@ -11,7 +11,7 @@ void ShaderProgram::init()
     // This is not in the constructor as we need to wait until GL is initialized!
     m_shaderProgram = glCreateProgram();
 
-    if (m_shaderProgram == 0)
+    if (!m_shaderProgram)
     {
         SDL_Log("Error creating shader program");
         exit(1);
@@ -20,7 +20,6 @@ void ShaderProgram::init()
 
 ShaderProgram::~ShaderProgram()
 {
-    enable();//TODO is this required?
     glDeleteProgram(m_shaderProgram);
 }
 
@@ -28,7 +27,7 @@ void ShaderProgram::addShader(const GLenum shaderType, const char* shaderSource)
 {
     const GLint shaderObj = glCreateShader(shaderType);
 
-    if (shaderObj == 0)
+    if (!shaderObj)
     {
         SDL_Log("Error creating shader type %d", shaderType);
         exit(1);
@@ -64,7 +63,7 @@ void ShaderProgram::finalise()
     GLchar errorLog[1024] = {0};
 
     glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &success);
-    if (success == 0)
+    if (!success)
     {
         glGetProgramInfoLog(m_shaderProgram, sizeof(errorLog), nullptr, errorLog);
         SDL_Log("Error linking shader program: '%s'\n", errorLog);

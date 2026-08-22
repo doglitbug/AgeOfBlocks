@@ -26,7 +26,7 @@ public:
     void onNotify(const std::string &message, MyType newValue) override;
 
     void init();
-    void render();
+    void render() const;
     void update(float deltaTime);
     void handleEvents();
 
