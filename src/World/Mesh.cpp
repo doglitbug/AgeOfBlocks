@@ -65,10 +65,18 @@ void Mesh::Render(const unsigned int meshIndex) const
 
 glm::mat4 Mesh::GetWorldMatrix() const
 {
-    auto translation = glm::translate(glm::mat4(1.0f),m_position);
-    auto rotation = glm::mat4_cast(glm::quat(glm::radians(m_rotation)));
+    constexpr auto identity = glm::mat4(1.0f);
+    const auto translation = glm::translate(identity, m_position);
+    const auto rotation = glm::mat4_cast(glm::quat(glm::radians(m_rotation)));
 
+    // Remember T * R * S
     return translation * rotation * m_scale;
+}
+
+glm::mat3 Mesh::GetNormalMatrix() const
+{
+    const auto model = GetWorldMatrix();
+    return glm::transpose(glm::inverse(model));
 }
 
 void Mesh::LoadFromScene(const aiScene *pScene, const std::string &filename)

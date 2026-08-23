@@ -87,6 +87,8 @@ void ShaderProgram::finalise()
     // Get locations for base colors
     m_ambientColorLocation = getUniformLocation("ambientColor");
     m_ambientIntensityLocation = getUniformLocation("ambientIntensity");
+    m_lightPositionLocation = getUniformLocation("lightPosition");
+    m_lightColorLocation = getUniformLocation("lightColor");
 }
 
 void ShaderProgram::setAmbientColor(const glm::vec3& ambientColor)
@@ -116,6 +118,11 @@ void ShaderProgram::enable() const
 {
     glUseProgram(m_shaderProgram);
     //Send our color info
+    //TODO Move these to the World/App, instead of a shader program
+    //Ambient
     glUniform3fv(m_ambientColorLocation, 1, glm::value_ptr(m_ambientColor));
     glUniform1f(m_ambientIntensityLocation, m_ambientIntensity);
+    //Diffuse
+    glUniform3fv(m_lightPositionLocation, 1, glm::value_ptr(m_lightPosition));
+    glUniform3fv(m_lightColorLocation, 1, glm::value_ptr(m_lightColor));
 }

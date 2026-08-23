@@ -45,6 +45,7 @@ public:
     float m_scale;
 
     glm::mat4 GetWorldMatrix() const;
+    glm::mat3 GetNormalMatrix() const;
 private:
     struct InternalMesh
     {
@@ -76,8 +77,6 @@ private:
     std::vector<glm::vec3> m_positions;
     std::vector<glm::vec2> m_textureCoords;
     std::vector<glm::vec3> m_normals;
-
-
 
     void checkOpenGLError(const std::string& location);
 };

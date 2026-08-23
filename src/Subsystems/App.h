@@ -52,7 +52,8 @@ private:
     SDL_GLContext glContext;
 
     ShaderProgram m_3dShaderProgram;
-    GLint gTranslateLocation;
+    GLint gModelLocation;
+    GLint gNormalLocation;
     GLint gCameraLocation;
     GLint gSamplerLocation;
 

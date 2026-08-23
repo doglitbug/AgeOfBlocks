@@ -27,7 +27,14 @@ private:
 
     // Ambient color information
     glm::vec3 m_ambientColor=glm::vec3(0.9f, 0.95f, 1.0f);
-    float m_ambientIntensity=0.8f;
+    float m_ambientIntensity=0.6f;
     GLint m_ambientColorLocation{};
     GLint m_ambientIntensityLocation{};
+
+    // Diffuse color information
+    glm::vec3 m_lightPosition=glm::vec3(1.0f, 1.0f, 0.0f);
+    glm::vec3 m_lightColor=glm::vec3(1.0f, 1.0f, 1.0f);
+    GLint m_lightPositionLocation{};
+    GLint m_lightColorLocation{};
+
 };

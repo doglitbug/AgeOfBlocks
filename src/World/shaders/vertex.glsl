@@ -2,14 +2,21 @@
 
 layout (location = 0) in vec3 Position;
 layout (location = 1) in vec2 TextureCoord;
+layout (location = 2) in vec3 aNormal;
 
-uniform mat4 gTranslate;
+uniform mat4 model;
 uniform mat4 gCamera;
 
+out vec3 Normal;
+out vec3 FragPos;
 out vec2 TextureCoord0;
 
 void main()
 {
-    gl_Position =  gCamera * gTranslate * vec4(Position, 1.0);
+    FragPos = vec3(model * vec4(Position, 1.0));
+
+    Normal = mat3(model) * aNormal;
     TextureCoord0 = TextureCoord;
+
+    gl_Position =  gCamera * vec4(FragPos, 1.0);
 }
