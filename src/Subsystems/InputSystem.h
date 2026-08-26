@@ -25,7 +25,7 @@ public:
     void clean() const;
 
     /// @return Normalized movement vector based on user input
-    glm::vec2 getMovement();
+    glm::vec2 getMovement() const;
 
     /// @brief See if the action is currently being performed via keyboard/controller
     /// @param action actions.MENU/ATTACK etc
@@ -43,8 +43,8 @@ public:
     // Mouse handling
     void initializeMouse();
     bool getMouseButtonState(mouseButtons buttonNumber);
-    glm::vec2 getMousePosition();
-    glm::vec2 getMouseMovement();
+    glm::vec2 getMousePosition() const;
+    glm::vec2 getMouseMovement() const;
 
 private:
     // Mouse

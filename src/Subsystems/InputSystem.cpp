@@ -81,7 +81,7 @@ void InputSystem::clean() const
     }
 }
 
-glm::vec2 InputSystem::getMovement()
+glm::vec2 InputSystem::getMovement() const
 {
     glm::vec2 newVelocity(0.0f, 0.0f);
 
@@ -111,7 +111,7 @@ glm::vec2 InputSystem::getMovement()
     return newVelocity;
 }
 
-glm::vec2 InputSystem::getMouseMovement()
+glm::vec2 InputSystem::getMouseMovement() const
 {
     return m_mouseMovement;
 }
@@ -190,7 +190,7 @@ bool InputSystem::getMouseButtonState(mouseButtons buttonNumber)
     return m_mouseButtonStates[static_cast<int>(buttonNumber)];
 }
 
-glm::vec2 InputSystem::getMousePosition()
+glm::vec2 InputSystem::getMousePosition() const
 {
     return m_mousePosition;
 }
@@ -209,12 +209,12 @@ void InputSystem::onButtonChange(const SDL_Event &event)
 
 void InputSystem::onKeyChange()
 {
-    m_keyStates = SDL_GetKeyboardState(NULL);
+    m_keyStates = SDL_GetKeyboardState(nullptr);
 }
 
 void InputSystem::onMouseMove(const SDL_Event &event)
 {
-    const float scale = 1.0f;
+    constexpr float scale = 1.0f;
     // TODO Make this a setting?
     m_mousePosition.x = (event.motion.x / scale);
     m_mousePosition.y = (event.motion.y / scale);
