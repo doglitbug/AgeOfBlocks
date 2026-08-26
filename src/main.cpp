@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 
     float deltaTime = 0;
 
-    //TODO Mover all this crap to the app itself?
+    //TODO Move all this crap to the app itself?
     while (App::get()->running()) {
         const Uint64 frameStart = SDL_GetTicks();
 

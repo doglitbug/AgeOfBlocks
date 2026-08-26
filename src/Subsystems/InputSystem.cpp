@@ -36,40 +36,30 @@ void InputSystem::initializeGamepads()
     m_bGamepad = true;
 }
 
-void InputSystem::update()
+void InputSystem::update(const SDL_Event& event)
 {
-    m_mouseMovement = {0.0f, 0.0f};
-
-    SDL_Event event;
-    while (SDL_PollEvent(&event))
+    switch (event.type)
     {
-        switch (event.type)
-        {
-        case SDL_EVENT_QUIT:
-            App::get()->quit();
-            return;
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        onButtonChange(event);
+        break;
 
-        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
-        case SDL_EVENT_GAMEPAD_BUTTON_UP:
-            onButtonChange(event);
-            break;
+    case SDL_EVENT_MOUSE_MOTION:
+        onMouseMove(event);
+        break;
 
-        case SDL_EVENT_MOUSE_MOTION:
-            onMouseMove(event);
-            break;
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
+        onMouseButtonChange(event);
+        break;
 
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            onMouseButtonChange(event);
-            break;
-
-        case SDL_EVENT_KEY_DOWN:
-        case SDL_EVENT_KEY_UP:
-            onKeyChange();
-            break;
-        default:
-            break;
-        }
+    case SDL_EVENT_KEY_DOWN:
+    case SDL_EVENT_KEY_UP:
+        onKeyChange();
+        break;
+    default:
+        break;
     }
 }
 
@@ -85,20 +75,24 @@ glm::vec2 InputSystem::getMovement() const
 {
     glm::vec2 newVelocity(0.0f, 0.0f);
 
-    if (getKeyDown(App::get()->getSettings()->m_keyboard.RIGHT) || getButtonDown(App::get()->getSettings()->m_gamepad.RIGHT))
+    if (getKeyDown(App::get()->getSettings()->m_keyboard.RIGHT) || getButtonDown(
+        App::get()->getSettings()->m_gamepad.RIGHT))
     {
         newVelocity.x = 1.0f;
     }
-    else if (getKeyDown(App::get()->getSettings()->m_keyboard.LEFT) || getButtonDown(App::get()->getSettings()->m_gamepad.LEFT))
+    else if (getKeyDown(App::get()->getSettings()->m_keyboard.LEFT) || getButtonDown(
+        App::get()->getSettings()->m_gamepad.LEFT))
     {
         newVelocity.x = -1.0f;
     }
 
-    if (getKeyDown(App::get()->getSettings()->m_keyboard.DOWN) || getButtonDown(App::get()->getSettings()->m_gamepad.DOWN))
+    if (getKeyDown(App::get()->getSettings()->m_keyboard.DOWN) || getButtonDown(
+        App::get()->getSettings()->m_gamepad.DOWN))
     {
         newVelocity.y = 1.0f;
     }
-    else if (getKeyDown(App::get()->getSettings()->m_keyboard.UP) || getButtonDown(App::get()->getSettings()->m_gamepad.UP))
+    else if (getKeyDown(App::get()->getSettings()->m_keyboard.UP) || getButtonDown(
+        App::get()->getSettings()->m_gamepad.UP))
     {
         newVelocity.y = -1.0f;
     }
@@ -121,20 +115,20 @@ bool InputSystem::getAction(const actions action) const
     switch (action)
     {
     case actions::MENU:
-        return getKeyDown(App::get()->getSettings()->m_keyboard.MENU) || getButtonDown(App::get()->getSettings()->m_gamepad.MENU);
-        break;
+        return getKeyDown(App::get()->getSettings()->m_keyboard.MENU) || getButtonDown(
+            App::get()->getSettings()->m_gamepad.MENU);
     case actions::ATTACK:
-        return getKeyDown(App::get()->getSettings()->m_keyboard.ATTACK) || getButtonDown(App::get()->getSettings()->m_gamepad.ATTACK);
-        break;
+        return getKeyDown(App::get()->getSettings()->m_keyboard.ATTACK) || getButtonDown(
+            App::get()->getSettings()->m_gamepad.ATTACK);
     case actions::SECONDARY_ATTACK:
-        return getKeyDown(App::get()->getSettings()->m_keyboard.SECONDARY_ATTACK) || getButtonDown(App::get()->getSettings()->m_gamepad.SECONDARY_ATTACK);
-        break;
+        return getKeyDown(App::get()->getSettings()->m_keyboard.SECONDARY_ATTACK) || getButtonDown(
+            App::get()->getSettings()->m_gamepad.SECONDARY_ATTACK);
     case actions::CONFIRM:
-        return getKeyDown(App::get()->getSettings()->m_keyboard.CONFIRM) || getButtonDown(App::get()->getSettings()->m_gamepad.CONFIRM);
-        break;
+        return getKeyDown(App::get()->getSettings()->m_keyboard.CONFIRM) || getButtonDown(
+            App::get()->getSettings()->m_gamepad.CONFIRM);
     case actions::CANCEL:
-        return getKeyDown(App::get()->getSettings()->m_keyboard.CANCEL) || getButtonDown(App::get()->getSettings()->m_gamepad.CANCEL);
-        break;
+        return getKeyDown(App::get()->getSettings()->m_keyboard.CANCEL) || getButtonDown(
+            App::get()->getSettings()->m_gamepad.CANCEL);
     }
     return false;
 }
@@ -190,6 +184,11 @@ bool InputSystem::getMouseButtonState(mouseButtons buttonNumber)
     return m_mouseButtonStates[static_cast<int>(buttonNumber)];
 }
 
+void InputSystem::resetMouseMovement()
+{
+    m_mouseMovement = {0.0f, 0.0f};
+}
+
 glm::vec2 InputSystem::getMousePosition() const
 {
     return m_mousePosition;
@@ -202,7 +201,7 @@ bool InputSystem::getKeyDown(const int key) const
     return m_keyStates[key];
 }
 
-void InputSystem::onButtonChange(const SDL_Event &event)
+void InputSystem::onButtonChange(const SDL_Event& event)
 {
     m_buttonStates[event.gbutton.button] = event.gbutton.down;
 }
@@ -212,7 +211,7 @@ void InputSystem::onKeyChange()
     m_keyStates = SDL_GetKeyboardState(nullptr);
 }
 
-void InputSystem::onMouseMove(const SDL_Event &event)
+void InputSystem::onMouseMove(const SDL_Event& event)
 {
     constexpr float scale = 1.0f;
     // TODO Make this a setting?
@@ -222,7 +221,7 @@ void InputSystem::onMouseMove(const SDL_Event &event)
     m_mouseMovement.y = (event.motion.yrel / scale);
 }
 
-void InputSystem::onMouseButtonChange(const SDL_Event &event)
+void InputSystem::onMouseButtonChange(const SDL_Event& event)
 {
     const bool state = event.button.down;
     // TODO Refactor this like onButtonChange

@@ -8,7 +8,8 @@
 #include <sstream>
 
 #include "App.h"
-bool readFileToString(const std::string &filePath, std::string &output)
+
+bool readFileToString(const std::string& filePath, std::string& output)
 {
     std::ifstream inputFile(filePath, std::ios::in | std::ios::binary);
     if (!inputFile.is_open())
@@ -21,19 +22,23 @@ bool readFileToString(const std::string &filePath, std::string &output)
     output = streamBuffer.str();
     return true;
 }
-void App::onNotify(const std::string &message, const MyType newValue)
+
+void App::onNotify(const std::string& message, const MyType newValue)
 {
     if (message == "RESOLUTION")
     {
+        HELLO
         const glm::ivec2 screenResolution = std::get<glm::ivec2>(newValue);
         // TODO Store fov, near and far as variables?
         mCamera.setPerspective(45.0f, screenResolution.x, screenResolution.y, 0.1f, 100.0f);
         glViewport(0, 0, screenResolution.x, screenResolution.y);
     }
 }
+
 void App::init()
 {
     m_pSettings = new Settings();
+    m_pSettings->addObserver(this);
 
     // Attempt to initialize SDL
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
@@ -52,7 +57,7 @@ void App::init()
     m_pWindow = SDL_CreateWindow("Age of Blocks", screenResolution.x, screenResolution.y, flags);
     if (m_pWindow == nullptr)
     {
-       SDL_Log("Window Creation Error: %s", SDL_GetError());
+        SDL_Log("Window Creation Error: %s", SDL_GetError());
         exit(1);
     }
 
@@ -92,7 +97,7 @@ void App::init()
     gCameraLocation = m_3dShaderProgram.getUniformLocation("gCamera");
 
     // Texture Sampler
-    gSamplerLocation = m_3dShaderProgram.getUniformLocation( "gSampler");
+    gSamplerLocation = m_3dShaderProgram.getUniformLocation("gSampler");
 
     // Create input subsystem
     m_pInput = new InputSystem();
@@ -106,31 +111,49 @@ void App::init()
     m_bRunning = true;
 }
 
-void App::render() const
+void App::handleEvents()
 {
-    glClearColor(0.15f, 0.15f, 0.18f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    RenderScene();
-    SDL_GL_SwapWindow(m_pWindow);
+    SDL_Event event;
+    m_pInput->resetMouseMovement();
+
+    while (SDL_PollEvent(&event))
+    {
+        switch (event.type)
+        {
+        case SDL_EVENT_QUIT:
+            quit();
+            return;
+        case SDL_EVENT_WINDOW_RESIZED:
+            m_pSettings->setResolution(event.window.data1, event.window.data2);
+            return;
+        default:
+            m_pInput->update(event);
+            break;
+        }
+    }
+
+    if (m_pInput->getAction(actions::MENU))
+    {
+        toggleMouseLock();
+    }
 }
 
 void App::update(const float deltaTime)
 {
     m_playerObject.m_rotation.y += deltaTime * 50;
 
-    m_pInput->update();
     // Do Camera movement, later on this will be moving a player object that the camera is attached to
     mCamera.Move(m_pInput->getMovement() * deltaTime * 10.0f);
     // TODO Mouse movement would need to rotate the player object too.
     mCamera.MouseLook(m_pInput->getMouseMovement() * deltaTime);
 }
 
-void App::handleEvents()
+void App::render() const
 {
-    if (m_pInput->getAction(actions::MENU))
-    {
-        toggleMouseLock();
-    }
+    glClearColor(0.15f, 0.15f, 0.18f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    RenderScene();
+    SDL_GL_SwapWindow(m_pWindow);
 }
 
 void App::toggleMouseLock()
@@ -145,6 +168,7 @@ App::~App()
     SDL_DestroyWindow(m_pWindow);
     SDL_Quit();
 }
+
 void App::CompileShaders()
 {
     m_3dShaderProgram.init();
@@ -155,14 +179,14 @@ void App::CompileShaders()
         exit(1);
     };
 
-    m_3dShaderProgram.addShader(GL_VERTEX_SHADER, vs.c_str() );
+    m_3dShaderProgram.addShader(GL_VERTEX_SHADER, vs.c_str());
 
     if (!readFileToString("src/World/shaders/fragment.glsl", fs))
     {
         exit(1);
     };
 
-    m_3dShaderProgram.addShader(GL_FRAGMENT_SHADER, fs.c_str() );
+    m_3dShaderProgram.addShader(GL_FRAGMENT_SHADER, fs.c_str());
 
     m_3dShaderProgram.finalise();
 }

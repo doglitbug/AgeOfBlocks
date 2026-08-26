@@ -26,16 +26,16 @@ public:
     void onNotify(const std::string &message, MyType newValue) override;
 
     void init();
-    void render() const;
-    void update(float deltaTime);
     void handleEvents();
+    void update(float deltaTime);
+    void render() const;
 
     void toggleMouseLock();
-    bool running() const { return m_bRunning; }
+    [[nodiscard]] bool running() const { return m_bRunning; }
     void quit() { m_bRunning = false; }
 
-    Settings *getSettings() const { return m_pSettings; }
-    InputSystem *getInput() const { return m_pInput; }
+    [[nodiscard]] Settings *getSettings() const { return m_pSettings; }
+    [[nodiscard]] InputSystem *getInput() const { return m_pInput; }
 
 private:
     App() = default;

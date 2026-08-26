@@ -42,7 +42,7 @@ void Camera::MouseLook(glm::vec2 look)
 {
     // Up/down dead-zone
     if (std::abs(look.y) < 0.02f){
-        look.y = 0.0f;
+        //look.y = 0.0f;
     }
 
     yaw += look.x * 10.0f;// TODO Sensitivity setting for both axis

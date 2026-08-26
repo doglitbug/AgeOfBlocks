@@ -21,11 +21,11 @@ public:
     InputSystem() = default;
     ~InputSystem() = default;
 
-    void update();
+    void update(const SDL_Event &event);
     void clean() const;
 
     /// @return Normalized movement vector based on user input
-    glm::vec2 getMovement() const;
+    [[nodiscard]] glm::vec2 getMovement() const;
 
     /// @brief See if the action is currently being performed via keyboard/controller
     /// @param action actions.MENU/ATTACK etc
@@ -38,13 +38,14 @@ public:
 
     /// @param button
     /// @return
-    std::string getButtonLabel(SDL_GamepadButton button) const;
+    [[nodiscard]] std::string getButtonLabel(SDL_GamepadButton button) const;
 
     // Mouse handling
     void initializeMouse();
     bool getMouseButtonState(mouseButtons buttonNumber);
-    glm::vec2 getMousePosition() const;
-    glm::vec2 getMouseMovement() const;
+    void resetMouseMovement();
+    [[nodiscard]] glm::vec2 getMousePosition() const;
+    [[nodiscard]] glm::vec2 getMouseMovement() const;
 
 private:
     // Mouse
@@ -57,12 +58,12 @@ private:
     // Keyboard
     const bool *m_keyStates;
     void onKeyChange();
-    bool getKeyDown(int key) const;
+    [[nodiscard]] bool getKeyDown(int key) const;
 
     // Joysticks
     /// @brief are we using a GamePad?
     bool m_bGamepad;
-    bool getButtonDown(int button) const;
+    [[nodiscard]] bool getButtonDown(int button) const;
     SDL_Gamepad *m_gamepad;
     std::vector<bool> m_buttonStates;
     void onButtonChange(const SDL_Event &event);
