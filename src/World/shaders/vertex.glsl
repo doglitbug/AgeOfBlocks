@@ -15,7 +15,7 @@ void main()
 {
     FragPos = vec3(model * vec4(Position, 1.0));
 
-    Normal = mat3(model) * aNormal;
+    Normal = normalize(mat3(model) * aNormal);
     TextureCoord0 = TextureCoord;
 
     gl_Position =  gCamera * vec4(FragPos, 1.0);

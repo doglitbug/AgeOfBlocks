@@ -183,23 +183,28 @@ void Mesh::LoadMaterials(const aiScene *pScene, const std::string &filename)
 
 void Mesh::PopulateBuffers()
 {
+    // Fix 1: Positions Size
     glBindBuffer(GL_ARRAY_BUFFER, m_buffers[POSITION_VB]);
-    glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE(m_positions), m_positions.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, m_positions.size() * sizeof(m_positions[0]), m_positions.data(), GL_STATIC_DRAW);
     glEnableVertexAttribArray(POSITION_LOCATION);
     glVertexAttribPointer(POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+    // Fix 2: Texture Coords Size
     glBindBuffer(GL_ARRAY_BUFFER, m_buffers[TEXTURE_COORDS_VB]);
-    glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE(m_textureCoords), m_textureCoords.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, m_textureCoords.size() * sizeof(m_textureCoords[0]), m_textureCoords.data(), GL_STATIC_DRAW);
     glEnableVertexAttribArray(TEXTURE_COORD_LOCATION);
     glVertexAttribPointer(TEXTURE_COORD_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
+    // Fix 3: Normals Size
     glBindBuffer(GL_ARRAY_BUFFER, m_buffers[NORMAL_VB]);
-    glBufferData(GL_ARRAY_BUFFER, ARRAY_SIZE(m_normals), m_normals.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, m_normals.size() * sizeof(m_normals[0]), m_normals.data(), GL_STATIC_DRAW);
     glEnableVertexAttribArray(NORMAL_LOCATION);
     glVertexAttribPointer(NORMAL_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+    // Fix 4: Index Buffer Size
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffers[INDEX_BUFFER]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, ARRAY_SIZE(m_indices), m_indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(m_indices[0]), m_indices.data(), GL_STATIC_DRAW);
+
 }
 
 void Mesh::checkOpenGLError(const std::string &location)

@@ -31,6 +31,7 @@ public:
     void render() const;
 
     void toggleMouseLock();
+    void setResolution(int width, int height, bool resize = false);
     [[nodiscard]] bool running() const { return m_bRunning; }
     void quit() { m_bRunning = false; }
 

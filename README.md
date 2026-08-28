@@ -22,3 +22,15 @@ Step 3: Export for Assimp / C++ / OpenGL
 
 (Using gltf at this point in time, not using embedded texture)
 
+### Fix the Asset Export in Blender
+If you would prefer the engine code to remain untouched, you must fix the mesh topology inside Blender so that the glTF exporter writes out shared normals smoothly.
+
+Open the Synty asset inside Blender.
+
+Tab into Edit Mode, press A to select all vertices of the mesh.
+
+Press M and choose Merge -> By Distance. (Synty meshes have disconnected overlapping vertices; this welds them together, which allows smooth gradients to flow across the edge fields).
+
+Right-click the object in Object Mode and select Shade Smooth.Go to File -> Export -> glTF 2.0.
+
+Under the Mesh drop-down on the export settings sidebar, make sure Normals is checked, and export.

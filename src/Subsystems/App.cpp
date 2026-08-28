@@ -27,11 +27,8 @@ void App::onNotify(const std::string& message, const MyType newValue)
 {
     if (message == "RESOLUTION")
     {
-        HELLO
         const glm::ivec2 screenResolution = std::get<glm::ivec2>(newValue);
-        // TODO Store fov, near and far as variables?
-        mCamera.setPerspective(45.0f, screenResolution.x, screenResolution.y, 0.1f, 100.0f);
-        glViewport(0, 0, screenResolution.x, screenResolution.y);
+        setResolution(screenResolution.x, screenResolution.y, true);
     }
 }
 
@@ -52,7 +49,7 @@ void App::init()
     if (m_pSettings->getFullScreen())
         flags |= SDL_WINDOW_FULLSCREEN;
 
-    const glm::ivec2 screenResolution = App::getSettings()->getResolution(); // Used in OPENGL further down
+    const glm::ivec2 screenResolution = m_pSettings->getResolution(); // Used in OPENGL further down
 
     m_pWindow = SDL_CreateWindow("Age of Blocks", screenResolution.x, screenResolution.y, flags);
     if (m_pWindow == nullptr)
@@ -77,9 +74,7 @@ void App::init()
         exit(1);
     }
 
-    // TODO Get an observer for screen res changing and reset these two lines
-    mCamera.setPerspective(45.0f, screenResolution.x, screenResolution.y, 0.1f, 100.0f);
-    glViewport(0, 0, screenResolution.x, screenResolution.y);
+    setResolution(screenResolution.x, screenResolution.y);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -124,7 +119,8 @@ void App::handleEvents()
             quit();
             return;
         case SDL_EVENT_WINDOW_RESIZED:
-            m_pSettings->setResolution(event.window.data1, event.window.data2);
+            setResolution(event.window.data1, event.window.data2);
+            //TODO Tell the settings so it can be saved?
             return;
         default:
             m_pInput->update(event);
@@ -160,6 +156,18 @@ void App::toggleMouseLock()
 {
     m_mouseLocked = !m_mouseLocked;
     SDL_SetWindowRelativeMouseMode(m_pWindow, m_mouseLocked);
+}
+
+void App::setResolution(const int width, const int height, const bool resize)
+{
+    // Change window size?
+    if (resize)
+    {
+
+    }
+    // TODO Store fov, near and far as variables?
+    mCamera.setPerspective(45.0f, width, height, 0.1f, 100.0f);
+    glViewport(0, 0, width, height);
 }
 
 App::~App()
@@ -202,7 +210,7 @@ void App::RenderScene() const
     // TODO Move to objects render?
     glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_playerObject.GetWorldMatrix()));
 
-    m_playerObject.Render(1);
+    m_playerObject.Render(0);
 
 
     // TODO switch to 2d shader program and render GUI (or put in another function)
