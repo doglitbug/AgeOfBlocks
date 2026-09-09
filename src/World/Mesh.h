@@ -19,6 +19,7 @@
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a) / sizeof(a[0]))
 #define ARRAY_SIZE(a) (sizeof(a[0]) * a.size())
 #define ASSIMP_LOAD_FLAGS (aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices)
+
 enum BUFFER_TYPE
 {
     INDEX_BUFFER = 0,
@@ -66,6 +67,8 @@ private:
     void ReserveSpace(unsigned int numberVertices, unsigned int numberIndices);
     void LoadAllMeshes(const aiScene *pScene);
     void LoadMesh(const aiMesh *paiMesh);
+    void LoadAllBones(const aiMesh *pMesh);
+    void LoadBone(int bone_index, const aiBone* pBone);
     void LoadMaterials(const aiScene *pScene, const std::string &filename);
     void PopulateBuffers();
 

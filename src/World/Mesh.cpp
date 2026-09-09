@@ -48,8 +48,8 @@ void Mesh::Render(const unsigned int meshIndex) const
     // TODO If meshIndex = -1, render all?
     glBindVertexArray(m_VAO);
 
-    unsigned int i = meshIndex;
-    unsigned int materialIndex = m_meshes[i].materialIndex;
+    const unsigned int i = meshIndex;
+    const unsigned int materialIndex = m_meshes[i].materialIndex;
     if (materialIndex < m_textures.size())
     {
         m_textures[materialIndex]->Bind(COLOR_TEXTURE_UNIT);
@@ -86,6 +86,7 @@ void Mesh::LoadFromScene(const aiScene *pScene, const std::string &filename)
 
     unsigned int numberVertices = 0;
     unsigned int numberIndices = 0;
+    unsigned int numberBones = 0;
 
     CountVerticesAndIndices(pScene, numberVertices, numberIndices);
     ReserveSpace(numberVertices, numberIndices);
@@ -109,7 +110,7 @@ void Mesh::CountVerticesAndIndices(const aiScene *pScene, unsigned int &numberVe
     }
 }
 
-void Mesh::ReserveSpace(unsigned int numberVertices, unsigned int numberIndices)
+void Mesh::ReserveSpace(const unsigned int numberVertices, unsigned int numberIndices)
 {
     m_indices.reserve(numberIndices);
     m_positions.reserve(numberVertices);
@@ -148,6 +149,18 @@ void Mesh::LoadMesh(const aiMesh *paiMesh)
         m_indices.push_back(face.mIndices[1]);
         m_indices.push_back(face.mIndices[2]);
     }
+}
+
+void Mesh::LoadAllBones(const aiMesh* pMesh)
+{
+    for (int i = 0; i < pMesh->mNumBones; i++)
+    {
+        LoadBone(i, pMesh->mBones[i]);
+    }
+}
+
+void Mesh::LoadBone(int bone_index, const aiBone* pBone)
+{
 }
 
 void Mesh::LoadMaterials(const aiScene *pScene, const std::string &filename)

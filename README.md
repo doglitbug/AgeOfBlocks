@@ -13,7 +13,7 @@ Step 1: Import Synty FBX into Blender (5.2.0.LTS)
     - Check Ignore Leaf Bones
     - Check Force Connect Children
 - Click 'Import FBX' 
-- Delete unwanted skins (eg just keep SM_Prince_01)
+- Delete unwanted skins(meshes) (e.g. just keep SM_Prince_01)
 
 Step 2: Fix Materials and Textures
 - Synty assets often map to a single shared texture atlas (e.g., polygon texture maps)
@@ -24,3 +24,30 @@ Step 3: Export
 - Go to File > Export > gltf 2.0.
   - Under Format, select glTF Separate
   - Under Mesh, untick Normals
+
+
+## Aligning Kevin Iglesias animations
+
+This process is to align the Synty bones with the KI animations
+
+[
+Retarget Animations to Any Rig in Blender](https://www.youtube.com/watch?v=Op0AvUChNTo)
+
+[
+Retargeting Animations Using Blender Rokoko Plugin](https://www.youtube.com/watch?v=6kj_ZX_lIL4)
+
+Step 1: Import Animation
+- Go to File > Import > FBX (Legacy)
+- Under Transform, set Scale to 0.01
+- Check Animation
+- Check Armature > Automatic Bone Orientation (?? is this needed??)
+
+Step 2 ???
+Step 3 ???
+
+ From Almost.blend:
+ 
+change Synty Armature from X rotation 90 to 180,
+In Rokoko select rest and click retarget. Should be aligned correctly.
+
+Change synty Armature back to 90 before exporting skin (Due to z-up/y-up)
