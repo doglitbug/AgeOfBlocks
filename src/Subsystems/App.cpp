@@ -210,7 +210,7 @@ void App::RenderScene() const
     // TODO Move to objects render?
     glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_playerObject.GetWorldMatrix()));
 
-    m_playerObject.Render(0);
+    m_playerObject.Render(m_meshNumber);
 
 
     // TODO switch to 2d shader program and render GUI (or put in another function)

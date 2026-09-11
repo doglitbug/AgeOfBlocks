@@ -11,6 +11,28 @@
 
 #define DEBUG(x) std::cout << "Debug: " << x << std::endl;
 
+// Helper to convert Assimp matrix to GLM matrix
+glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
+    glm::mat4 to;
+    to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
+    to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
+    to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
+    to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
+    return to;
+}
+
+// Helper to convert GLM matrix back to Assimp matrix
+aiMatrix4x4 glmToAiMatrix4x4(const glm::mat4& from) {
+    aiMatrix4x4 to;
+    to.a1 = from[0][0]; to.a2 = from[1][0]; to.a3 = from[2][0]; to.a4 = from[3][0];
+    to.b1 = from[0][1]; to.b2 = from[1][1]; to.b3 = from[2][1]; to.b4 = from[3][1];
+    to.c1 = from[0][2]; to.c2 = from[1][2]; to.c3 = from[2][2]; to.c4 = from[3][2];
+    to.d1 = from[0][3]; to.d2 = from[1][3]; to.d3 = from[2][3]; to.d4 = from[3][3];
+    return to;
+}
+
+glm::mat4 blenderCorrection = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
 Mesh::Mesh()
 {
     m_position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -136,7 +158,8 @@ void Mesh::LoadMesh(const aiMesh *paiMesh)
         const aiVector3D &pTextureCoords = paiMesh->HasTextureCoords(0) ? paiMesh->mTextureCoords[0][i] : aiVector3D(0.0f, 0.0f, 0.0f);
         const aiVector3D &pNormal = paiMesh->mNormals[i];//TODO Set to 0,1,0 if not present?
 
-        m_positions.emplace_back(pPos.x, pPos.y, pPos.z);
+        // A -90 degree rotation around X changes: (X, Y, Z) -> (X, Z, -Y)
+        m_positions.emplace_back(pPos.x, pPos.z, -pPos.y);
         m_textureCoords.emplace_back(pTextureCoords.x, pTextureCoords.y);
         m_normals.emplace_back(pNormal.x, pNormal.y, pNormal.z);
     }

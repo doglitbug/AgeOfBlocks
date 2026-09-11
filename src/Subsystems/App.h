@@ -38,6 +38,7 @@ public:
     [[nodiscard]] Settings *getSettings() const { return m_pSettings; }
     [[nodiscard]] InputSystem *getInput() const { return m_pInput; }
 
+    int m_meshNumber = 0;
 private:
     App() = default;
     ~App();
@@ -64,4 +65,6 @@ private:
     bool m_mouseLocked;
 
     Mesh m_playerObject;
+
+
 };

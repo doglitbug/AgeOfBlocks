@@ -10,9 +10,9 @@ Step 1: Import Synty FBX into Blender (5.2.0.LTS)
 - In the right-hand import panel:
   - Uncheck Animation
   - Under Armature:
-    - Check Ignore Leaf Bones
-    - Check Force Connect Children
-- Click 'Import FBX' 
+    - Check Ignore Leaf Bones (this removes unneeded end bones)
+    - Check Force Connect Children (this makes the bones align properly instead of facing out at 90 angles)
+- Click 'Import FBX'
 - Delete unwanted skins(meshes) (e.g. just keep SM_Prince_01)
 
 Step 2: Fix Materials and Textures
@@ -23,18 +23,16 @@ Step 2: Fix Materials and Textures
 Step 3: Export
 - Go to File > Export > gltf 2.0.
   - Under Format, select glTF Separate
-  - Under Mesh, untick Normals
+  - Under Data > Mesh, untick Normals (this smoothes the faces instead of them being a solid color)
 
 
 ## Aligning Kevin Iglesias animations
 
 This process is to align the Synty bones with the KI animations
 
-[
-Retarget Animations to Any Rig in Blender](https://www.youtube.com/watch?v=Op0AvUChNTo)
+[Retarget Animations to Any Rig in Blender](https://www.youtube.com/watch?v=Op0AvUChNTo)
 
-[
-Retargeting Animations Using Blender Rokoko Plugin](https://www.youtube.com/watch?v=6kj_ZX_lIL4)
+[Retargeting Animations Using Blender Rokoko Plugin](https://www.youtube.com/watch?v=6kj_ZX_lIL4)
 
 Step 1: Import Animation
 - Go to File > Import > FBX (Legacy)
@@ -47,7 +45,8 @@ Step 3 ???
 
  From Almost.blend:
  
-change Synty Armature from X rotation 90 to 180,
+Change Synty Armature from X rotation 90 to 180
 In Rokoko select rest and click retarget. Should be aligned correctly.
+
 
 Change synty Armature back to 90 before exporting skin (Due to z-up/y-up)
