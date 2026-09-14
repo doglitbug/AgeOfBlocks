@@ -6,10 +6,9 @@
 #include "Settings.h"
 #include "InputSystem.h"
 #include "Camera.h"
-#include "Mesh.h"
+#include "Object.h"
 #include "ShaderProgram.h"
 
-#define HELLO std::cout << "Hello" << std::endl;
 class App : public IObserver
 {
 public:
@@ -64,7 +63,6 @@ private:
     bool m_bRunning;
     bool m_mouseLocked;
 
-    Mesh m_playerObject;
-
-
+    Object m_playerObject;
+    Object m_NPC;
 };

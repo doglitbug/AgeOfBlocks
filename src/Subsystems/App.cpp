@@ -84,6 +84,8 @@ void App::init()
     CompileShaders();
 
     m_playerObject.LoadMesh("assets/models/villager.gltf");
+    m_NPC.LoadMesh("assets/models/villager.gltf");
+    m_NPC.m_position = glm::vec3(2.0f, 0.0f, 0.0f);
 
     // Only look this up once and save!
     gModelLocation = m_3dShaderProgram.getUniformLocation("model");
@@ -163,7 +165,7 @@ void App::setResolution(const int width, const int height, const bool resize)
     // Change window size?
     if (resize)
     {
-
+        SDL_Log("Window resize");
     }
     // TODO Store fov, near and far as variables?
     mCamera.setPerspective(45.0f, width, height, 0.1f, 100.0f);
@@ -209,9 +211,10 @@ void App::RenderScene() const
     // Send the translation info to the GPU
     // TODO Move to objects render?
     glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_playerObject.GetWorldMatrix()));
-
     m_playerObject.Render(m_meshNumber);
 
+    glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_NPC.GetWorldMatrix()));
+    m_NPC.Render(21);
 
     // TODO switch to 2d shader program and render GUI (or put in another function)
 }

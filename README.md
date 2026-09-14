@@ -38,15 +38,19 @@ Step 1: Import Animation
 - Go to File > Import > FBX (Legacy)
 - Under Transform, set Scale to 0.01
 - Check Animation
-- Check Armature > Automatic Bone Orientation (?? is this needed??)
 
-Step 2 ???
+Step 2: Open Rokoko sidebar
+- Build bone list and remove the following mappings:
+  - Middle finger
+  - Ring finger
+  - Pinky finger (?)
+  - Thumb 03
+  - 
 Step 3 ???
-
- From Almost.blend:
  
-Change Synty Armature from X rotation 90 to 180
+
+
+
+
+Change Synty Armature from X rotation 90 to 180 (?)
 In Rokoko select rest and click retarget. Should be aligned correctly.
-
-
-Change synty Armature back to 90 before exporting skin (Due to z-up/y-up)

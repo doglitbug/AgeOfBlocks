@@ -50,7 +50,7 @@ void Settings::save()
     }
     else
     {
-        std::cout << "Error writing to file" << std::endl;
+        SDL_Log("Error writing to settings file");
     }
 
     outFile.close();

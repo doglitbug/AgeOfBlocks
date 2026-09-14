@@ -1,9 +1,10 @@
-#include "Mesh.h"
+#include "Object.h"
 
 #include <assimp/postprocess.h>
 
 #include <iostream>
 #include <filesystem>
+#include <SDL3/SDL_log.h>
 
 #include "glm/detail/type_quat.hpp"
 #include "glm/ext/matrix_transform.hpp"
@@ -11,36 +12,15 @@
 
 #define DEBUG(x) std::cout << "Debug: " << x << std::endl;
 
-// Helper to convert Assimp matrix to GLM matrix
-glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
-    glm::mat4 to;
-    to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
-    to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
-    to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
-    to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
-    return to;
-}
-
-// Helper to convert GLM matrix back to Assimp matrix
-aiMatrix4x4 glmToAiMatrix4x4(const glm::mat4& from) {
-    aiMatrix4x4 to;
-    to.a1 = from[0][0]; to.a2 = from[1][0]; to.a3 = from[2][0]; to.a4 = from[3][0];
-    to.b1 = from[0][1]; to.b2 = from[1][1]; to.b3 = from[2][1]; to.b4 = from[3][1];
-    to.c1 = from[0][2]; to.c2 = from[1][2]; to.c3 = from[2][2]; to.c4 = from[3][2];
-    to.d1 = from[0][3]; to.d2 = from[1][3]; to.d3 = from[2][3]; to.d4 = from[3][3];
-    return to;
-}
-
-glm::mat4 blenderCorrection = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-Mesh::Mesh()
+Object::Object()
 {
     m_position = glm::vec3(0.0f, 0.0f, 0.0f);
     m_rotation = glm::vec3(0.0f, 0.0f, 0.0f);
     m_scale = 1.0f;
+    m_VAO = -1;
 }
 
-bool Mesh::LoadMesh(const std::string &filename)
+bool Object::LoadMesh(const std::string &filename)
 {
     glGenVertexArrays(1, &m_VAO);
     glBindVertexArray(m_VAO);
@@ -57,7 +37,7 @@ bool Mesh::LoadMesh(const std::string &filename)
         return false;
     }
 
-    LoadFromScene(pScene, filename);
+    LoadFromFile(pScene, filename);
 
     PopulateBuffers();
 
@@ -65,7 +45,7 @@ bool Mesh::LoadMesh(const std::string &filename)
     return true;
 }
 
-void Mesh::Render(const unsigned int meshIndex) const
+void Object::Render(const unsigned int meshIndex) const
 {
     // TODO If meshIndex = -1, render all?
     glBindVertexArray(m_VAO);
@@ -85,7 +65,7 @@ void Mesh::Render(const unsigned int meshIndex) const
     glBindVertexArray(0);
 }
 
-glm::mat4 Mesh::GetWorldMatrix() const
+glm::mat4 Object::GetWorldMatrix() const
 {
     constexpr auto identity = glm::mat4(1.0f);
     const auto translation = glm::translate(identity, m_position);
@@ -95,30 +75,38 @@ glm::mat4 Mesh::GetWorldMatrix() const
     return translation * rotation * m_scale;
 }
 
-glm::mat3 Mesh::GetNormalMatrix() const
+glm::mat3 Object::GetNormalMatrix() const
 {
     const auto model = GetWorldMatrix();
     return glm::transpose(glm::inverse(model));
 }
 
-void Mesh::LoadFromScene(const aiScene *pScene, const std::string &filename)
+void Object::LoadFromFile(const aiScene *pScene, const std::string &filename)
 {
     m_meshes.resize(pScene->mNumMeshes);
     m_textures.resize(pScene->mNumMaterials);
 
     unsigned int numberVertices = 0;
     unsigned int numberIndices = 0;
-    unsigned int numberBones = 0;
 
     CountVerticesAndIndices(pScene, numberVertices, numberIndices);
     ReserveSpace(numberVertices, numberIndices);
 
-    LoadAllMeshes(pScene);
+    // Load all meshes
+    for (unsigned int i = 0; i < m_meshes.size(); i++)
+    {
+        const aiMesh *paiMesh = pScene->mMeshes[i];
+        LoadMesh(i, paiMesh);
+    }
 
+    // Load all materials
     LoadMaterials(pScene, filename);
+
+    // Load animations?
+    SDL_Log("Animation count: (%d)", pScene->mNumAnimations);
 }
 
-void Mesh::CountVerticesAndIndices(const aiScene *pScene, unsigned int &numberVertices, unsigned int &numberIndices)
+void Object::CountVerticesAndIndices(const aiScene *pScene, unsigned int &numberVertices, unsigned int &numberIndices)
 {
     for (unsigned int i = 0; i < m_meshes.size(); i++)
     {
@@ -132,33 +120,25 @@ void Mesh::CountVerticesAndIndices(const aiScene *pScene, unsigned int &numberVe
     }
 }
 
-void Mesh::ReserveSpace(const unsigned int numberVertices, unsigned int numberIndices)
+void Object::ReserveSpace(const unsigned int numberVertices, const unsigned int numberIndices)
 {
     m_indices.reserve(numberIndices);
     m_positions.reserve(numberVertices);
     m_textureCoords.reserve(numberVertices);
     m_normals.reserve(numberVertices);
+    m_bones.resize(numberVertices);
 }
 
-void Mesh::LoadAllMeshes(const aiScene *pScene)
-{
-    for (unsigned int i = 0; i < m_meshes.size(); i++)
-    {
-        const aiMesh *paiMesh = pScene->mMeshes[i];
-        LoadMesh(paiMesh);
-    }
-}
-
-void Mesh::LoadMesh(const aiMesh *paiMesh)
+void Object::LoadMesh(uint meshIndex, const aiMesh *paiMesh)
 {
     // Populate vertex attribute vectors
     for (unsigned int i = 0; i < paiMesh->mNumVertices; i++)
     {
         const aiVector3D &pPos = paiMesh->mVertices[i];
         const aiVector3D &pTextureCoords = paiMesh->HasTextureCoords(0) ? paiMesh->mTextureCoords[0][i] : aiVector3D(0.0f, 0.0f, 0.0f);
-        const aiVector3D &pNormal = paiMesh->mNormals[i];//TODO Set to 0,1,0 if not present?
+        const aiVector3D &pNormal = paiMesh->mNormals ? paiMesh->mNormals[i]:aiVector3D(0.0f, 1.0f, 0.0f);
 
-        // A -90 degree rotation around X changes: (X, Y, Z) -> (X, Z, -Y)
+        // A -90-degree rotation around X changes: (X, Y, Z) -> (X, Z, -Y)
         m_positions.emplace_back(pPos.x, pPos.z, -pPos.y);
         m_textureCoords.emplace_back(pTextureCoords.x, pTextureCoords.y);
         m_normals.emplace_back(pNormal.x, pNormal.y, pNormal.z);
@@ -172,21 +152,46 @@ void Mesh::LoadMesh(const aiMesh *paiMesh)
         m_indices.push_back(face.mIndices[1]);
         m_indices.push_back(face.mIndices[2]);
     }
-}
 
-void Mesh::LoadAllBones(const aiMesh* pMesh)
-{
-    for (int i = 0; i < pMesh->mNumBones; i++)
+    // Populate the bones buffer
+    if (paiMesh->HasBones())
     {
-        LoadBone(i, pMesh->mBones[i]);
+        for (int i = 0; i < paiMesh->mNumBones; i++)
+        {
+            LoadBone(meshIndex, paiMesh->mBones[i]);
+        }
     }
 }
 
-void Mesh::LoadBone(int bone_index, const aiBone* pBone)
+void Object::LoadBone(const uint meshIndex, const aiBone* pBone)
 {
+    int BoneId = GetBoneId(pBone);
+
+    for (uint i = 0 ; i < pBone->mNumWeights ; i++) {
+        const aiVertexWeight& vw = pBone->mWeights[i];
+        const uint GlobalVertexID = m_meshes[meshIndex].startingVertex + pBone->mWeights[i].mVertexId;
+        m_bones[GlobalVertexID].AddBoneData(BoneId, vw.mWeight);
+    }
 }
 
-void Mesh::LoadMaterials(const aiScene *pScene, const std::string &filename)
+int Object::GetBoneId(const aiBone* pBone)
+{
+    int BoneIndex = 0;
+    std::string BoneName(pBone->mName.C_Str());
+
+    if (m_BoneNameToIndexMap.find(BoneName) == m_BoneNameToIndexMap.end()) {
+        // Allocate an index for a new bone
+        BoneIndex = static_cast<int>(m_BoneNameToIndexMap.size());
+        m_BoneNameToIndexMap[BoneName] = BoneIndex;
+    }
+    else {
+        BoneIndex = m_BoneNameToIndexMap[BoneName];
+    }
+
+    return BoneIndex;
+}
+
+void Object::LoadMaterials(const aiScene *pScene, const std::string &filename)
 {
     // Get directory path from filename
     std::filesystem::path filePath(filename);
@@ -217,33 +222,42 @@ void Mesh::LoadMaterials(const aiScene *pScene, const std::string &filename)
     }
 }
 
-void Mesh::PopulateBuffers()
+void Object::PopulateBuffers() const
 {
-    // Fix 1: Positions Size
-    glBindBuffer(GL_ARRAY_BUFFER, m_buffers[POSITION_VB]);
-    glBufferData(GL_ARRAY_BUFFER, m_positions.size() * sizeof(m_positions[0]), m_positions.data(), GL_STATIC_DRAW);
-    glEnableVertexAttribArray(POSITION_LOCATION);
-    glVertexAttribPointer(POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    // Fix 2: Texture Coords Size
-    glBindBuffer(GL_ARRAY_BUFFER, m_buffers[TEXTURE_COORDS_VB]);
-    glBufferData(GL_ARRAY_BUFFER, m_textureCoords.size() * sizeof(m_textureCoords[0]), m_textureCoords.data(), GL_STATIC_DRAW);
-    glEnableVertexAttribArray(TEXTURE_COORD_LOCATION);
-    glVertexAttribPointer(TEXTURE_COORD_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-    // Fix 3: Normals Size
-    glBindBuffer(GL_ARRAY_BUFFER, m_buffers[NORMAL_VB]);
-    glBufferData(GL_ARRAY_BUFFER, m_normals.size() * sizeof(m_normals[0]), m_normals.data(), GL_STATIC_DRAW);
-    glEnableVertexAttribArray(NORMAL_LOCATION);
-    glVertexAttribPointer(NORMAL_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    // Fix 4: Index Buffer Size
+    // Index Buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffers[INDEX_BUFFER]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(m_indices[0]), m_indices.data(), GL_STATIC_DRAW);
 
+    // Positions
+    glBindBuffer(GL_ARRAY_BUFFER, m_buffers[POSITION_VB]);
+    glBufferData(GL_ARRAY_BUFFER, m_positions.size() * sizeof(m_positions[0]), m_positions.data(), GL_STATIC_DRAW);
+    glEnableVertexAttribArray(POSITION_LOCATION);
+    glVertexAttribPointer(POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    // Texture Coords
+    glBindBuffer(GL_ARRAY_BUFFER, m_buffers[TEXTURE_COORDS_VB]);
+    glBufferData(GL_ARRAY_BUFFER, m_textureCoords.size() * sizeof(m_textureCoords[0]), m_textureCoords.data(), GL_STATIC_DRAW);
+    glEnableVertexAttribArray(TEXTURE_COORD_LOCATION);
+    glVertexAttribPointer(TEXTURE_COORD_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    // Normals
+    glBindBuffer(GL_ARRAY_BUFFER, m_buffers[NORMAL_VB]);
+    glBufferData(GL_ARRAY_BUFFER, m_normals.size() * sizeof(m_normals[0]), m_normals.data(), GL_STATIC_DRAW);
+    glEnableVertexAttribArray(NORMAL_LOCATION);
+    glVertexAttribPointer(NORMAL_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    // Bones
+    glBindBuffer(GL_ARRAY_BUFFER, m_buffers[BONE_VB]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(m_bones[0]) * m_bones.size(), &m_bones[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(BONE_ID_LOCATION);
+    glVertexAttribIPointer(BONE_ID_LOCATION, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), static_cast<const GLvoid*>(nullptr));
+    glEnableVertexAttribArray(BONE_WEIGHT_LOCATION);
+    glVertexAttribPointer(BONE_WEIGHT_LOCATION, MAX_NUM_BONES_PER_VERTEX, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData),
+                          reinterpret_cast<const GLvoid*>((MAX_NUM_BONES_PER_VERTEX * sizeof(int32_t))));
+
 }
 
-void Mesh::checkOpenGLError(const std::string &location)
+void Object::checkOpenGLError(const std::string &location)
 {
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR)
