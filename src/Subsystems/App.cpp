@@ -139,6 +139,8 @@ void App::handleEvents()
 void App::update(const float deltaTime)
 {
     m_playerObject.m_rotation.y += deltaTime * 50;
+    //TODO Wrap around, possibly add to a object.update(deltaTime)
+    m_playerObject.m_animationTime += deltaTime;
 
     // Do Camera movement, later on this will be moving a player object that the camera is attached to
     mCamera.Move(m_pInput->getMovement() * deltaTime * 10.0f);
@@ -146,7 +148,7 @@ void App::update(const float deltaTime)
     mCamera.MouseLook(m_pInput->getMouseMovement() * deltaTime);
 }
 
-void App::render() const
+void App::render()
 {
     glClearColor(0.15f, 0.15f, 0.18f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -201,7 +203,7 @@ void App::CompileShaders()
     m_3dShaderProgram.finalise();
 }
 
-void App::RenderScene() const
+void App::RenderScene()
 {
     m_3dShaderProgram.enable();
     // Send the camera stuff to the GPU
@@ -211,6 +213,16 @@ void App::RenderScene() const
     // Send the translation info to the GPU
     // TODO Move to objects render?
     glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_playerObject.GetWorldMatrix()));
+
+    std::vector<glm::mat4> transforms;
+    //TODO Remove second parameter...
+    m_playerObject.GetBoneTransforms(transforms, m_playerObject.m_animationTime);
+
+    for (uint i = 0 ; i < transforms.size() ; i++) {
+
+        //TODO Split up the shader program and use polymorphism
+        m_3dShaderProgram.SetBoneTransform(i, transforms[i]);
+    }
     m_playerObject.Render(m_meshNumber);
 
     glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_NPC.GetWorldMatrix()));

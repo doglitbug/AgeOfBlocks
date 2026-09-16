@@ -1,5 +1,6 @@
 #pragma once
 
+#include <format>
 #include <map>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -24,6 +25,18 @@
 #define ARRAY_SIZE(a) (sizeof(a[0]) * a.size())
 #define ASSIMP_LOAD_FLAGS (aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices)
 
+// TODO Move to utilities file
+inline glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
+    glm::mat4 to;
+    // Assimp is row-major (a, b, c, d are rows; 1, 2, 3, 4 are columns)
+    // GLM is column-major (to[col][row])
+    to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
+    to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
+    to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
+    to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
+    return to;
+}
+
 enum BUFFER_TYPE
 {
     INDEX_BUFFER = 0,
@@ -47,9 +60,12 @@ public:
     glm::vec3 m_position{};
     glm::vec3 m_rotation{};
     float m_scale;
+    float m_animationTime = 0.0f;
 
     [[nodiscard]] glm::mat4 GetWorldMatrix() const;
     [[nodiscard]] glm::mat3 GetNormalMatrix() const;
+
+    void GetBoneTransforms(std::vector<glm::mat4> &boneTransforms, float animationTime);
 private:
     #define MAX_NUM_BONES_PER_VERTEX 4
 
@@ -73,9 +89,7 @@ private:
         uint BoneIDs[MAX_NUM_BONES_PER_VERTEX] = { 0 };
         float Weights[MAX_NUM_BONES_PER_VERTEX] = { 0.0f };
 
-        VertexBoneData()
-        {
-        }
+        VertexBoneData() = default;
 
         void AddBoneData(const uint BoneID, const float Weight)
         {
@@ -93,6 +107,21 @@ private:
             SDL_Log("Shit"); // BoneID 33, weight 0 comes here once per villager file load
         }
     };
+
+    struct BoneInfo
+    {
+        glm::mat4 offsetMatrix{};
+        glm::mat4 finalTransformation{};
+
+        explicit BoneInfo(const aiMatrix4x4 &offset)
+        {
+            const auto glm = aiMatrix4x4ToGlm(offset);
+            offsetMatrix = glm;
+            finalTransformation = {0};
+        }
+    };
+    std::vector<BoneInfo> m_BoneInfo;
+
     void LoadFromFile(const aiScene *pScene, const std::string &filename);
     void CountVerticesAndIndices(const aiScene *pScene, unsigned int &numberVertices, unsigned int &numberIndices);
     void ReserveSpace(unsigned int numberVertices, unsigned int numberIndices);
@@ -102,7 +131,9 @@ private:
     void LoadBone(uint meshIndex, const aiBone* pBone);
     int GetBoneId(const aiBone* pBone);
 
-    void LoadMaterials(const aiScene *pScene, const std::string &filename);
+    void ReadNodeHierarchy(float animationTimeTicks, const aiNode* pNode, const glm::mat4 &parentTransform);
+
+    void LoadMaterials(const aiScene *xpScene, const std::string &filename);
     void PopulateBuffers() const;
 
     GLuint m_VAO;
@@ -116,6 +147,9 @@ private:
     std::vector<VertexBoneData> m_bones;
 
     std::map<std::string,uint> m_BoneNameToIndexMap;
+
+    Assimp::Importer importer;
+    const aiScene* pScene;
 
     static void checkOpenGLError(const std::string& location);
 };

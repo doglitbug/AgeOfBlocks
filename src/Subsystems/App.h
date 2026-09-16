@@ -27,7 +27,7 @@ public:
     void init();
     void handleEvents();
     void update(float deltaTime);
-    void render() const;
+    void render();
 
     void toggleMouseLock();
     void setResolution(int width, int height, bool resize = false);
@@ -43,7 +43,7 @@ private:
     ~App();
 
     void CompileShaders();
-    void RenderScene() const;
+    void RenderScene();
 
     SDL_Window *m_pWindow;
     Settings *m_pSettings;

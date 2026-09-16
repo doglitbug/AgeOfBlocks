@@ -27,9 +27,11 @@ bool Object::LoadMesh(const std::string &filename)
 
     glGenBuffers(ARRAY_SIZE_IN_ELEMENTS(m_buffers), m_buffers);
 
-    Assimp::Importer importer;
+    //TODO Remove from being global
+    //Assimp::Importer importer
 
-    const aiScene *pScene = importer.ReadFile(filename.c_str(), ASSIMP_LOAD_FLAGS);
+    //TODO factor pScene out?
+    pScene = importer.ReadFile(filename.c_str(), ASSIMP_LOAD_FLAGS);
 
     if (!pScene)
     {
@@ -165,12 +167,18 @@ void Object::LoadMesh(uint meshIndex, const aiMesh *paiMesh)
 
 void Object::LoadBone(const uint meshIndex, const aiBone* pBone)
 {
-    int BoneId = GetBoneId(pBone);
+    const int boneId = GetBoneId(pBone);
+
+    if (boneId == m_BoneInfo.size())
+    {
+        const BoneInfo bi(pBone->mOffsetMatrix);
+        m_BoneInfo.push_back(bi);
+    }
 
     for (uint i = 0 ; i < pBone->mNumWeights ; i++) {
         const aiVertexWeight& vw = pBone->mWeights[i];
         const uint GlobalVertexID = m_meshes[meshIndex].startingVertex + pBone->mWeights[i].mVertexId;
-        m_bones[GlobalVertexID].AddBoneData(BoneId, vw.mWeight);
+        m_bones[GlobalVertexID].AddBoneData(boneId, vw.mWeight);
     }
 }
 
@@ -191,7 +199,46 @@ int Object::GetBoneId(const aiBone* pBone)
     return BoneIndex;
 }
 
-void Object::LoadMaterials(const aiScene *pScene, const std::string &filename)
+void Object::GetBoneTransforms(std::vector<glm::mat4>& boneTransforms, const float animationTime)
+{
+    auto ticksPerSecond = static_cast<float>(pScene->mAnimations[0]->mTicksPerSecond);
+    if (ticksPerSecond == 0.0f) ticksPerSecond = 25.0f;
+
+    float timeInTicks = animationTime * ticksPerSecond;
+    //TODO Remove this mod once we wrap the animationTime!
+    float animationTimeTicks = fmod(timeInTicks, static_cast<float>(pScene->mAnimations[0]->mDuration));
+
+    constexpr auto identity = glm::mat4(1.f);
+    ReadNodeHierarchy(animationTimeTicks, pScene->mRootNode, identity);
+    boneTransforms.resize(m_BoneInfo.size());
+
+    for (unsigned int i = 0; i < m_BoneInfo.size(); i++)
+    {
+        boneTransforms[i] = m_BoneInfo[i].finalTransformation;
+    }
+}
+
+void Object::ReadNodeHierarchy(const float animationTimeTicks, const aiNode* pNode, const glm::mat4& parentTransform)
+{
+    const std::string nodeName(pNode->mName.C_Str());
+
+    const glm::mat4 nodeTransform(aiMatrix4x4ToGlm(pNode->mTransformation));
+
+    const glm::mat4 globalTransform = parentTransform * nodeTransform;
+
+    if (m_BoneNameToIndexMap.find(nodeName) != m_BoneNameToIndexMap.end())
+    {
+        const unsigned int boneIndex = m_BoneNameToIndexMap[nodeName];
+        m_BoneInfo[boneIndex].finalTransformation = globalTransform * m_BoneInfo[boneIndex].offsetMatrix;
+    }
+
+    for (unsigned int i = 0; i < pNode->mNumChildren; i++)
+    {
+        ReadNodeHierarchy(animationTimeTicks, pNode->mChildren[i], globalTransform);
+    }
+}
+
+void Object::LoadMaterials(const aiScene *xpScene, const std::string &filename)
 {
     // Get directory path from filename
     std::filesystem::path filePath(filename);

@@ -89,6 +89,11 @@ void ShaderProgram::finalise()
     m_ambientIntensityLocation = getUniformLocation("ambientIntensity");
     m_lightPositionLocation = getUniformLocation("lightPosition");
     m_lightColorLocation = getUniformLocation("lightColor");
+
+    for (unsigned int i = 0; i < std::size(m_boneLocation); ++i) {
+        std::string name = "gBones[" + std::to_string(i) + "]";
+        m_boneLocation[i] = getUniformLocation(name.c_str());
+    }
 }
 
 void ShaderProgram::setAmbientColor(const glm::vec3& ambientColor)
@@ -126,3 +131,15 @@ void ShaderProgram::enable() const
     glUniform3fv(m_lightPositionLocation, 1, glm::value_ptr(m_lightPosition));
     glUniform3fv(m_lightColorLocation, 1, glm::value_ptr(m_lightColor));
 }
+
+void ShaderProgram::SetBoneTransform(const unsigned int index, const glm::mat4& transform)
+{
+    // Ensure index is within valid bounds of the array
+    if (index >= std::size(m_boneLocation)) {
+        return;
+    }
+
+    // Upload the matrix using the standard GLM value pointer
+    glUniformMatrix4fv(m_boneLocation[index], 1, GL_FALSE, glm::value_ptr(transform));
+}
+

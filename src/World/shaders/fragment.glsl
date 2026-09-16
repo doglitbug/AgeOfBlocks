@@ -1,8 +1,10 @@
 #version 330 core
 
-in vec2 TextureCoord0;
+in vec2 TextureCoord;
 in vec3 FragPos;
 in vec3 Normal;
+in ivec4 BoneIds;
+in vec4 Weights;
 
 out vec4 FragColor;
 
@@ -25,7 +27,7 @@ void main()
 
     vec3 ambient = ambientIntensity * ambientColor;
 
-    vec4 texColor = texture(gSampler, TextureCoord0);
+    vec4 texColor = texture(gSampler, TextureCoord);
 
     vec3 result = (ambient + diffuse) * texColor.rgb;
 

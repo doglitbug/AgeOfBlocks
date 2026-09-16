@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "glad/glad.h"
+#include "glm/fwd.hpp"
 #include "glm/vec3.hpp"
 
 class ShaderProgram
@@ -21,6 +22,8 @@ public:
     [[nodiscard]]
     GLint getUniformLocation(const std::string &uniformName) const;
     void enable() const;
+
+    void SetBoneTransform(const uint index, const glm::mat4& transform);
 private:
     GLuint m_shaderProgram{};
     std::vector<GLuint> m_shaders;
@@ -36,5 +39,7 @@ private:
     glm::vec3 m_lightColor=glm::vec3(0.2f, 0.2f, 0.8f);
     GLint m_lightPositionLocation{};
     GLint m_lightColorLocation{};
+
+    GLuint m_boneLocation[100];
 
 };
