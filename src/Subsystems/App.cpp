@@ -138,7 +138,7 @@ void App::handleEvents()
 
 void App::update(const float deltaTime)
 {
-    m_playerObject.m_rotation.y += deltaTime * 50;
+    //m_playerObject.m_rotation.y += deltaTime * 50;
     //TODO Wrap around, possibly add to a object.update(deltaTime)
     m_playerObject.m_animationTime += deltaTime;
 
@@ -219,7 +219,6 @@ void App::RenderScene()
     m_playerObject.GetBoneTransforms(transforms, m_playerObject.m_animationTime);
 
     for (uint i = 0 ; i < transforms.size() ; i++) {
-
         //TODO Split up the shader program and use polymorphism
         m_3dShaderProgram.SetBoneTransform(i, transforms[i]);
     }

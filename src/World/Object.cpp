@@ -141,7 +141,8 @@ void Object::LoadMesh(uint meshIndex, const aiMesh *paiMesh)
         const aiVector3D &pNormal = paiMesh->mNormals ? paiMesh->mNormals[i]:aiVector3D(0.0f, 1.0f, 0.0f);
 
         // A -90-degree rotation around X changes: (X, Y, Z) -> (X, Z, -Y)
-        m_positions.emplace_back(pPos.x, pPos.z, -pPos.y);
+        //m_positions.emplace_back(pPos.x, pPos.z, -pPos.y);
+        m_positions.emplace_back(pPos.x, pPos.y, pPos.z);
         m_textureCoords.emplace_back(pTextureCoords.x, pTextureCoords.y);
         m_normals.emplace_back(pNormal.x, pNormal.y, pNormal.z);
     }
@@ -221,8 +222,31 @@ void Object::GetBoneTransforms(std::vector<glm::mat4>& boneTransforms, const flo
 void Object::ReadNodeHierarchy(const float animationTimeTicks, const aiNode* pNode, const glm::mat4& parentTransform)
 {
     const std::string nodeName(pNode->mName.C_Str());
+    const aiAnimation* pAnimation = pScene->mAnimations[8];
+    glm::mat4 nodeTransform(aiMatrix4x4ToGlm(pNode->mTransformation));
 
-    const glm::mat4 nodeTransform(aiMatrix4x4ToGlm(pNode->mTransformation));
+    const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, nodeName);
+    if (pNodeAnim)
+    {
+        // Interpolate scaling and generate scaling transformation matrix
+        aiVector3D scaling;
+        CalculateInterpolatedScaling(scaling, animationTimeTicks, pNodeAnim);
+        glm::mat4 scalingM = glm::scale(glm::mat4(1.0f),glm::vec3(scaling.x, scaling.y, scaling.z));
+
+        // Interpolate rotation and generate rotation transformation matrix
+        aiQuaternion rotation;
+        CalculateInterpolatedRotation(rotation, animationTimeTicks, pNodeAnim);
+        glm::quat glmRotation = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z);
+        glm::mat4 rotationM = glm::mat4_cast(glmRotation);
+
+        // Interpolate translation and generate translation transformation matrix
+        aiVector3D translation;
+        CalculateInterpolatedPosition(translation, animationTimeTicks, pNodeAnim);
+        glm::mat4 translationM = glm::translate(glm::mat4(1.0f), glm::vec3(translation.x, translation.y, translation.z));
+
+        // Combine
+        nodeTransform = translationM * rotationM * scalingM;
+    }
 
     const glm::mat4 globalTransform = parentTransform * nodeTransform;
 
@@ -236,6 +260,112 @@ void Object::ReadNodeHierarchy(const float animationTimeTicks, const aiNode* pNo
     {
         ReadNodeHierarchy(animationTimeTicks, pNode->mChildren[i], globalTransform);
     }
+}
+
+void Object::CalculateInterpolatedScaling(aiVector3D& out, float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+{
+    if (pNodeAnim->mNumScalingKeys == 1)
+    {
+        out = pNodeAnim->mScalingKeys[0].mValue;
+        return;
+    }
+
+    unsigned int scalingIndex = FindScaling(animationTimeTicks, pNodeAnim);
+
+    float t1 = pNodeAnim->mScalingKeys[scalingIndex].mTime;
+    float t2 = pNodeAnim->mScalingKeys[scalingIndex+1].mTime;
+
+    float factor = (animationTimeTicks - t1)/(t2 - t1);
+    const aiVector3D& start = pNodeAnim->mScalingKeys[scalingIndex].mValue;
+    const aiVector3D& end = pNodeAnim->mScalingKeys[scalingIndex+1].mValue;
+    out = start + factor * (end-start);
+}
+
+unsigned int Object::FindScaling(const float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+{
+    for (uint i = 0 ; i < pNodeAnim->mNumScalingKeys - 1 ; i++) {
+        float t = (float)pNodeAnim->mScalingKeys[i + 1].mTime;
+        if (animationTimeTicks < t) {
+            return i;
+        }
+    }
+
+    return 0;
+}
+
+void Object::CalculateInterpolatedRotation(aiQuaternion& out, float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+{
+    if (pNodeAnim->mNumRotationKeys == 1) {
+        out = pNodeAnim->mRotationKeys[0].mValue;
+        return;
+    }
+
+    uint rotationIndex = FindRotation(animationTimeTicks, pNodeAnim);
+
+    float t1 = (float)pNodeAnim->mRotationKeys[rotationIndex].mTime;
+    float t2 = (float)pNodeAnim->mRotationKeys[rotationIndex+1].mTime;
+    float factor = (animationTimeTicks - t1) / (t2-t1);
+
+    const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[rotationIndex].mValue;
+    const aiQuaternion& EndRotationQ   = pNodeAnim->mRotationKeys[rotationIndex+1].mValue;
+    aiQuaternion::Interpolate(out, StartRotationQ, EndRotationQ, factor);
+    out.Normalize();
+}
+
+unsigned int Object::FindRotation(float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+{
+    for (uint i = 0 ; i < pNodeAnim->mNumRotationKeys - 1 ; i++) {
+        float t = (float)pNodeAnim->mRotationKeys[i + 1].mTime;
+        if (animationTimeTicks < t) {
+            return i;
+        }
+    }
+}
+
+void Object::CalculateInterpolatedPosition(aiVector3D& out, float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+{
+    // we need at least two values to interpolate...
+    if (pNodeAnim->mNumPositionKeys == 1) {
+        out = pNodeAnim->mPositionKeys[0].mValue;
+        return;
+    }
+
+    uint PositionIndex = FindPosition(animationTimeTicks, pNodeAnim);
+    uint NextPositionIndex = PositionIndex + 1;
+
+    float t1 = (float)pNodeAnim->mPositionKeys[PositionIndex].mTime;
+    float t2 = (float)pNodeAnim->mPositionKeys[NextPositionIndex].mTime;
+    float DeltaTime = t2 - t1;
+    float Factor = (animationTimeTicks - t1) / DeltaTime;
+
+    const aiVector3D& Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
+    const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
+    out = Start + Factor * (End - Start);
+}
+
+unsigned int Object::FindPosition(float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+{
+    for (uint i = 0 ; i < pNodeAnim->mNumPositionKeys - 1 ; i++) {
+        float t = (float)pNodeAnim->mPositionKeys[i + 1].mTime;
+        if (animationTimeTicks < t) {
+            return i;
+        }
+    }
+
+    return 0;
+}
+
+const aiNodeAnim* Object::FindNodeAnim(const aiAnimation* pAnimation, const std::string& nodeName)
+{
+    for (uint i = 0 ; i < pAnimation->mNumChannels ; i++) {
+        const aiNodeAnim* pNodeAnim = pAnimation->mChannels[i];
+
+        if (std::string(pNodeAnim->mNodeName.data) == nodeName) {
+            return pNodeAnim;
+        }
+    }
+
+    return nullptr;
 }
 
 void Object::LoadMaterials(const aiScene *xpScene, const std::string &filename)

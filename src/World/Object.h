@@ -132,6 +132,13 @@ private:
     int GetBoneId(const aiBone* pBone);
 
     void ReadNodeHierarchy(float animationTimeTicks, const aiNode* pNode, const glm::mat4 &parentTransform);
+    void CalculateInterpolatedScaling(aiVector3D &out, float animationTimeTicks, const aiNodeAnim* pNodeAnim);
+    unsigned int FindScaling(float animationTimeTicks, const aiNodeAnim* pNodeAnim);
+    void CalculateInterpolatedRotation(aiQuaternion &out, float animationTimeTicks, const aiNodeAnim* pNodeAnim);
+    unsigned int FindRotation(float animationTimeTicks, const aiNodeAnim* pNodeAnim);
+    void CalculateInterpolatedPosition(aiVector3D &out, float animationTimeTicks, const aiNodeAnim* pNodeAnim);
+    unsigned int FindPosition(float animationTimeTicks, const aiNodeAnim* pNodeAnim);
+    const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string& nodeName);
 
     void LoadMaterials(const aiScene *xpScene, const std::string &filename);
     void PopulateBuffers() const;
