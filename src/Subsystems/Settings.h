@@ -43,7 +43,7 @@ class Settings : public ISubject
 {
 public:
     Settings();
-    ~Settings() = default;
+    ~Settings() override = default;
 
     void load();
     void save();

@@ -1,6 +1,5 @@
 #include "InputSystem.h"
 #include "App.h"
-#include <iostream>
 
 void InputSystem::initializeGamepads()
 {
@@ -12,7 +11,7 @@ void InputSystem::initializeGamepads()
     }
 
     int count;
-    auto joystickIDs = SDL_GetGamepads(&count);
+    const auto joystickIDs = SDL_GetGamepads(&count);
     if (!joystickIDs)
     {
         SDL_Log("Unable to get joystick IDs");
@@ -89,12 +88,12 @@ glm::vec2 InputSystem::getMovement() const
     if (getKeyDown(App::get()->getSettings()->m_keyboard.DOWN) || getButtonDown(
         App::get()->getSettings()->m_gamepad.DOWN))
     {
-        newVelocity.y = 1.0f;
+        newVelocity.y = -1.0f;
     }
     else if (getKeyDown(App::get()->getSettings()->m_keyboard.UP) || getButtonDown(
         App::get()->getSettings()->m_gamepad.UP))
     {
-        newVelocity.y = -1.0f;
+        newVelocity.y = 1.0f;
     }
 
     if (glm::length(newVelocity) != 0)

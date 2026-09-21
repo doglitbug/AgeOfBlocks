@@ -19,18 +19,20 @@ public:
     ///        Will need to account for rotation?
     ///        in future, this cameras position would be set by the object the camera is attached to and that object would deal with collisions
     /// @param movement Movement vector
-    void Move(glm::vec2 movement);
+    void move(glm::vec2 movement);
 
     /// @brief Look around using mouse delta.
     ///        This would probably one of the thumbsticks on a gamepad.
     /// @param look Mouse movement delta
-    void MouseLook(glm::vec2 look);
+    void mouseLook(glm::vec2 look);
 
-    private:
-    glm::vec3 mUp{};
-    glm::vec3 mPosition{};
-    glm::vec3 mDirection{};
-    glm::mat4x4 mPerspective{};
+    //TODO Move this back to private once we follow player position
+    glm::vec3 m_position{};
+
+private:
+    glm::vec3 m_up{};
+    glm::vec3 m_direction{};
+    glm::mat4x4 m_perspective{};
 
     float pitch;
     float yaw;

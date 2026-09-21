@@ -6,8 +6,10 @@
 #include "Settings.h"
 #include "InputSystem.h"
 #include "Camera.h"
-#include "Object.h"
+#include "ObjectMesh.h"
 #include "ShaderProgram.h"
+#include "Terrain/map.h"
+#include "Terrain/shaders/TerrainShader.h"
 
 class App : public IObserver
 {
@@ -53,6 +55,8 @@ private:
     SDL_GLContext glContext;
 
     ShaderProgram m_3dShaderProgram;
+    TerrainShader m_terrainShaderProgram;
+
     GLint gModelLocation;
     GLint gNormalLocation;
     GLint gCameraLocation;
@@ -63,6 +67,8 @@ private:
     bool m_bRunning;
     bool m_mouseLocked;
 
-    Object m_playerObject;
-    Object m_NPC;
+    ObjectMesh m_playerObject;
+    ObjectMesh m_NPC;
+
+    map *m_map;
 };

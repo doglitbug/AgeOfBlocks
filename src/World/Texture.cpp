@@ -3,7 +3,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
-Texture::Texture(GLenum textureTarget, const std::string &fileName)
+Texture::Texture(const GLenum textureTarget, const std::string &fileName) : m_textureObject(0)
 {
     m_textureTarget = textureTarget;
     m_fileName = fileName;
@@ -45,7 +45,7 @@ bool Texture::Load()
     return true;
 }
 
-void Texture::Bind(GLenum textureUnit)
+void Texture::Bind(const GLenum textureUnit) const
 {
     glActiveTexture(textureUnit);
     glBindTexture(m_textureTarget, m_textureObject);

@@ -23,7 +23,7 @@ public:
     GLint getUniformLocation(const std::string &uniformName) const;
     void enable() const;
 
-    void SetBoneTransform(const uint index, const glm::mat4& transform);
+    void SetBoneTransform(const uint index, const glm::mat4& transform) const;
 private:
     GLuint m_shaderProgram{};
     std::vector<GLuint> m_shaders;

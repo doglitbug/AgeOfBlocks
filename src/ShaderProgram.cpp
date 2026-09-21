@@ -132,7 +132,7 @@ void ShaderProgram::enable() const
     glUniform3fv(m_lightColorLocation, 1, glm::value_ptr(m_lightColor));
 }
 
-void ShaderProgram::SetBoneTransform(const unsigned int index, const glm::mat4& transform)
+void ShaderProgram::SetBoneTransform(const unsigned int index, const glm::mat4& transform) const
 {
     // Ensure index is within valid bounds of the array
     if (index >= std::size(m_boneLocation)) {
@@ -142,4 +142,3 @@ void ShaderProgram::SetBoneTransform(const unsigned int index, const glm::mat4& 
     // Upload the matrix using the standard GLM value pointer
     glUniformMatrix4fv(m_boneLocation[index], 1, GL_FALSE, glm::value_ptr(transform));
 }
-

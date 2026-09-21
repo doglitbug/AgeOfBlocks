@@ -25,6 +25,11 @@ file(GLOB_RECURSE SOURCES
 add_executable(${PROJECT_NAME} 
     ${SOURCES}
     "include/glad/glad.c"
+        src/Terrain/shaders/TerrainShader.cpp
+        src/Terrain/shaders/TerrainShader.h
+        src/World/BaseShader.cpp
+        src/World/BaseShader.h
+        src/Utils.h
 )
 
 # Include Directories

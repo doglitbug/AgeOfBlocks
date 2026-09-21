@@ -47,11 +47,11 @@ enum BUFFER_TYPE
     NUMBER_BUFFERS = 5
 };
 
-class Object
+class ObjectMesh
 {
 public:
-    Object();
-    ~Object() = default;
+    ObjectMesh();
+    ~ObjectMesh() = default;
 
     bool LoadMesh(const std::string &filename);
     void Render(unsigned int meshIndex) const;
@@ -59,11 +59,10 @@ public:
     // TODO move back to private and add accessor methods
     glm::vec3 m_position{};
     glm::vec3 m_rotation{};
-    float m_scale;
+    float m_scale = 1.0f;
     float m_animationTime = 0.0f;
 
     [[nodiscard]] glm::mat4 GetWorldMatrix() const;
-    [[nodiscard]] glm::mat3 GetNormalMatrix() const;
 
     void GetBoneTransforms(std::vector<glm::mat4> &boneTransforms, float animationTime);
 private:

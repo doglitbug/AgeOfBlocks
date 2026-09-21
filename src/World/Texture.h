@@ -13,7 +13,7 @@ public:
 
     bool Load();
 
-    void Bind(GLenum textureUnit);
+    void Bind(GLenum textureUnit) const;
 
 private:
     std::string m_fileName;

@@ -6,16 +6,16 @@
 
 Camera::Camera()
 {
-    mPosition = glm::vec3(0.0f, 1.5f, 5.0f);
-    mDirection = glm::vec3(0.0f, 0.0f, -1.0f);//Not important for starting value
-    mUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    m_position = glm::vec3(0.0f, 1.5f, -5.0f);
+    m_direction = glm::vec3(0.0f, 0.0f, 0.0f);//Not important for starting value
+    m_up = glm::vec3(0.0f, 1.0f, 0.0f);
     pitch = 0.0f;
-    yaw = -90.0f; // Looking down Z axis
+    yaw = 90.0f; // Looking down Z axis
 }
 
 void Camera::setPerspective(const float fov, const int screenWidth, const int screenHeight, const float near, const float far)
 {
-    mPerspective = glm::perspectiveFov(glm::radians(fov),
+    m_perspective = glm::perspectiveFov(glm::radians(fov),
                                        static_cast<float>(screenWidth),
                                        static_cast<float>(screenHeight),
                                        near,
@@ -24,21 +24,21 @@ void Camera::setPerspective(const float fov, const int screenWidth, const int sc
 
 glm::mat4 Camera::getViewMatrix() const
 {
-    return mPerspective * glm::lookAt(mPosition, mPosition + mDirection, mUp);
+    return m_perspective * glm::lookAt(m_position, m_position + m_direction, m_up);
 }
 
-void Camera::Move(const glm::vec2 movement)
+void Camera::move(const glm::vec2 movement)
 {
     // Lets do forward/backward movement. Ignore the up/down so that we walk along the ground (instead of flying)
     // TODO Dont ignore if flying
-    mPosition -= glm::vec3(mDirection.x, 0.0f, mDirection.z) * movement.y;
+    m_position += glm::vec3(m_direction.x, 0.0f, m_direction.z) * movement.y;
 
     // Let's do strafing!
-    const glm::vec3 rightVector = glm::cross(mDirection, mUp);
-    mPosition += rightVector * movement.x;
+    const glm::vec3 rightVector = glm::cross(m_direction, m_up);
+    m_position += rightVector * movement.x;
 }
 
-void Camera::MouseLook(glm::vec2 look)
+void Camera::mouseLook(glm::vec2 look)
 {
     // Up/down dead-zone
     if (std::abs(look.y) < 0.02f){
@@ -58,5 +58,5 @@ void Camera::MouseLook(glm::vec2 look)
     front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
     front.y = sin(glm::radians(pitch));
     front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    mDirection = glm::normalize(front);
+    m_direction = glm::normalize(front);
 }

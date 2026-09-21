@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     //TODO Parse command line arguments
     //app.parse(argc, argv)
 
-    float deltaTime = 0;
+    float deltaTime = 0.0f;
 
     //TODO Move all this crap to the app itself?
     while (App::get()->running()) {

@@ -3,25 +3,9 @@
 #include <glm/vec3.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <fstream>
 #include <string>
-#include <sstream>
 
 #include "App.h"
-
-bool readFileToString(const std::string& filePath, std::string& output)
-{
-    std::ifstream inputFile(filePath, std::ios::in | std::ios::binary);
-    if (!inputFile.is_open())
-    {
-        SDL_Log("Unable to open file");
-        return false;
-    }
-    std::ostringstream streamBuffer;
-    streamBuffer << inputFile.rdbuf();
-    output = streamBuffer.str();
-    return true;
-}
 
 void App::onNotify(const std::string& message, const MyType newValue)
 {
@@ -58,7 +42,7 @@ void App::init()
         exit(1);
     }
 
-    // OpenGL Stuff
+    // OpenGL Stuff version 3.3
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -105,6 +89,11 @@ void App::init()
     SDL_WarpMouseInWindow(m_pWindow, screenResolution.x / 2, screenResolution.y / 2);
     SDL_SetWindowRelativeMouseMode(m_pWindow, true);
 
+
+    m_map = new map(10);
+    m_map->generateMap();
+    m_map->populateBuffers();
+
     m_bRunning = true;
 }
 
@@ -143,9 +132,9 @@ void App::update(const float deltaTime)
     m_playerObject.m_animationTime += deltaTime;
 
     // Do Camera movement, later on this will be moving a player object that the camera is attached to
-    mCamera.Move(m_pInput->getMovement() * deltaTime * 10.0f);
+    mCamera.move(m_pInput->getMovement() * deltaTime * 10.0f);
     // TODO Mouse movement would need to rotate the player object too.
-    mCamera.MouseLook(m_pInput->getMouseMovement() * deltaTime);
+    mCamera.mouseLook(m_pInput->getMouseMovement() * deltaTime);
 }
 
 void App::render()
@@ -186,14 +175,14 @@ void App::CompileShaders()
     m_3dShaderProgram.init();
     std::string vs, fs;
 
-    if (!readFileToString("src/World/shaders/vertex.glsl", vs))
+    if (!Utils::readFileToString("src/World/shaders/vertex.glsl", vs))
     {
         exit(1);
     };
 
     m_3dShaderProgram.addShader(GL_VERTEX_SHADER, vs.c_str());
 
-    if (!readFileToString("src/World/shaders/fragment.glsl", fs))
+    if (!Utils::readFileToString("src/World/shaders/fragment.glsl", fs))
     {
         exit(1);
     };
@@ -201,10 +190,13 @@ void App::CompileShaders()
     m_3dShaderProgram.addShader(GL_FRAGMENT_SHADER, fs.c_str());
 
     m_3dShaderProgram.finalise();
+
+    m_terrainShaderProgram.init();
 }
 
 void App::RenderScene()
 {
+    glDisable(GL_CULL_FACE);
     m_3dShaderProgram.enable();
     // Send the camera stuff to the GPU
     auto cameraMatrix = mCamera.getViewMatrix();
@@ -215,7 +207,7 @@ void App::RenderScene()
     glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_playerObject.GetWorldMatrix()));
 
     std::vector<glm::mat4> transforms;
-    //TODO Remove second parameter...
+    //TODO Remove second parameter...or keep for poses?
     m_playerObject.GetBoneTransforms(transforms, m_playerObject.m_animationTime);
 
     for (uint i = 0 ; i < transforms.size() ; i++) {
@@ -227,5 +219,12 @@ void App::RenderScene()
     glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_NPC.GetWorldMatrix()));
     m_NPC.Render(21);
 
+    // Draw the world
+    m_terrainShaderProgram.enable();
+    //TODO Pass camera to render function, or should it be cached?
+    glUniformMatrix4fv(m_terrainShaderProgram.m_cameraLocation, 1, GL_FALSE, glm::value_ptr(cameraMatrix));
+    m_map->render();
+
     // TODO switch to 2d shader program and render GUI (or put in another function)
+    SDL_Log("Camera position (x,y,z): (%f,%f,%f)", mCamera.m_position.x, mCamera.m_position.y, mCamera.m_position.z);
 }
