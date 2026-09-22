@@ -3,7 +3,7 @@
 in vec2 TextureCoord;
 in vec3 FragPos;
 in vec3 Normal;
-in ivec4 BoneIds;
+flat in ivec4 BoneIds;
 in vec4 Weights;
 
 out vec4 FragColor;
