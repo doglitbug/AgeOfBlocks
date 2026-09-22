@@ -85,7 +85,8 @@ void BaseShader::finalize()
         glDeleteShader(shader);
     }
 
-    m_cameraLocation = getUniformLocation("gWVP");
+    m_cameraViewLocation = getUniformLocation("view");
+    m_cameraProjectionLocation = getUniformLocation("projection");
 }
 
 GLint BaseShader::getUniformLocation(const std::string& uniformName) const

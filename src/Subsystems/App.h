@@ -59,7 +59,8 @@ private:
 
     GLint gModelLocation;
     GLint gNormalLocation;
-    GLint gCameraLocation;
+    GLint gCameraViewLocation;
+    GLint gCameraProjectionLocation;
     GLint gSamplerLocation;
 
     Texture *pTexture;

@@ -6,25 +6,27 @@
 
 Camera::Camera()
 {
-    m_position = glm::vec3(0.0f, 1.5f, -5.0f);
-    m_direction = glm::vec3(0.0f, 0.0f, 0.0f);//Not important for starting value
+    m_position = glm::vec3(0.0f, 1.5f, 5.0f);
+    m_direction = glm::vec3(0.0f, 0.0f, -1.0f);//Not important for starting value
     m_up = glm::vec3(0.0f, 1.0f, 0.0f);
     pitch = 0.0f;
-    yaw = 90.0f; // Looking down Z axis
+    yaw = -90.0f; // Looking down Z axis
 }
 
 void Camera::setPerspective(const float fov, const int screenWidth, const int screenHeight, const float near, const float far)
 {
-    m_perspective = glm::perspectiveFov(glm::radians(fov),
-                                       static_cast<float>(screenWidth),
-                                       static_cast<float>(screenHeight),
-                                       near,
-                                       far);
+    const float aspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
+    m_perspective = glm::perspectiveLH(glm::radians(fov), aspect, near, far);
 }
 
 glm::mat4 Camera::getViewMatrix() const
 {
-    return m_perspective * glm::lookAt(m_position, m_position + m_direction, m_up);
+    return glm::lookAtLH(m_position, m_position + m_direction, m_up);
+}
+
+glm::mat4 Camera::getProjectionMatrix() const
+{
+    return m_perspective;
 }
 
 void Camera::move(const glm::vec2 movement)
@@ -35,7 +37,7 @@ void Camera::move(const glm::vec2 movement)
 
     // Let's do strafing!
     const glm::vec3 rightVector = glm::cross(m_direction, m_up);
-    m_position += rightVector * movement.x;
+    m_position -= rightVector * movement.x;
 }
 
 void Camera::mouseLook(glm::vec2 look)
@@ -45,7 +47,7 @@ void Camera::mouseLook(glm::vec2 look)
         //look.y = 0.0f;
     }
 
-    yaw += look.x * 10.0f;// TODO Sensitivity setting for both axis
+    yaw -= look.x * 10.0f;// TODO Sensitivity setting for both axis
     pitch += look.y * 10.0f;// TODO invert Y setting here
 
     // Clamp pitch to prevent flipping

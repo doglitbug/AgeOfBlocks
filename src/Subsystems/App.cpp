@@ -75,7 +75,8 @@ void App::init()
     gModelLocation = m_3dShaderProgram.getUniformLocation("model");
 
     // Set up Camera
-    gCameraLocation = m_3dShaderProgram.getUniformLocation("gCamera");
+    gCameraViewLocation = m_3dShaderProgram.getUniformLocation("view");
+    gCameraProjectionLocation = m_3dShaderProgram.getUniformLocation("projection");
 
     // Texture Sampler
     gSamplerLocation = m_3dShaderProgram.getUniformLocation("gSampler");
@@ -198,9 +199,12 @@ void App::RenderScene()
 {
     glDisable(GL_CULL_FACE);
     m_3dShaderProgram.enable();
+
     // Send the camera stuff to the GPU
-    auto cameraMatrix = mCamera.getViewMatrix();
-    glUniformMatrix4fv(gCameraLocation, 1, GL_FALSE, glm::value_ptr(cameraMatrix));
+    auto cameraView = mCamera.getViewMatrix();
+    glUniformMatrix4fv(gCameraViewLocation, 1, GL_FALSE, glm::value_ptr(cameraView));
+    auto cameraProjection = mCamera.getProjectionMatrix();
+    glUniformMatrix4fv(gCameraProjectionLocation, 1, GL_FALSE, glm::value_ptr(cameraProjection));
 
     // Send the translation info to the GPU
     // TODO Move to objects render?
@@ -219,10 +223,13 @@ void App::RenderScene()
     glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_NPC.GetWorldMatrix()));
     m_NPC.Render(21);
 
+
+
     // Draw the world
     m_terrainShaderProgram.enable();
     //TODO Pass camera to render function, or should it be cached?
-    glUniformMatrix4fv(m_terrainShaderProgram.m_cameraLocation, 1, GL_FALSE, glm::value_ptr(cameraMatrix));
+    glUniformMatrix4fv(m_terrainShaderProgram.m_cameraViewLocation, 1, GL_FALSE, glm::value_ptr(cameraView));
+    glUniformMatrix4fv(m_terrainShaderProgram.m_cameraProjectionLocation, 1, GL_FALSE, glm::value_ptr(cameraProjection));
     m_map->render();
 
     // TODO switch to 2d shader program and render GUI (or put in another function)

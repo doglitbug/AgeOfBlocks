@@ -15,7 +15,8 @@ public:
     virtual void enable();
     virtual void finalize();
     GLint getUniformLocation(const std::string &uniformName) const;
-    GLint m_cameraLocation;
+    GLint m_cameraViewLocation;
+    GLint m_cameraProjectionLocation;
 
 protected:
     void addShader(GLenum shaderType, const char* shaderSource);

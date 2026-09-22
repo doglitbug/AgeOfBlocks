@@ -7,7 +7,8 @@ layout (location = 3) in ivec4 aBoneIDs;
 layout (location = 4) in vec4 aWeights;
 
 uniform mat4 model;
-uniform mat4 gCamera;
+uniform mat4 view;
+uniform mat4 projection;
 
 out vec3 FragPos;
 out vec2 TextureCoord;
@@ -28,7 +29,7 @@ void main()
     vec4 bonedPosition = BoneTransform * vec4(aPosition, 1.0);
 
     FragPos = vec3(model * bonedPosition);
-    gl_Position =  gCamera * vec4(FragPos, 1.0);
+    gl_Position =  projection * view  * vec4(FragPos, 1.0);
 
     TextureCoord = aTextureCoord;
     Normal = normalize(mat3(model) * aNormal);
