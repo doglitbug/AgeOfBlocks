@@ -40,13 +40,13 @@ void map::populateBuffers()
     }
 
     //East wall
-    for (int z = size-1; z >= 0; --z)
+    for (int z = size; z > 0; --z)
     {
         const float y = 0;
         const float x = size * GRID_SIZE;
         // Pre-calculate physical geometric bounds for this specific quad step
         float z_left  = z * GRID_SIZE;
-        float z_right = (z + 1) * GRID_SIZE;
+        float z_right = (z - 1) * GRID_SIZE;
 
         float y_bottom = y;
         float y_top    = y + GRID_SIZE;
@@ -63,13 +63,13 @@ void map::populateBuffers()
     }
 
     //South wall
-    for (int x = size-1; x >= 0; --x)
+    for (int x = size; x > 0; --x)
     {
         const float y = 0;
         const float z = 0; // Constant depth
         // Pre-calculate physical geometric bounds for this specific quad step
-        float x_left  = (x + 1) * GRID_SIZE;
-        float x_right = x * GRID_SIZE;
+        float x_left  = x * GRID_SIZE;
+        float x_right = (x -1) * GRID_SIZE;
 
         float y_bottom = y;
         float y_top    = y + GRID_SIZE;
@@ -91,8 +91,8 @@ void map::populateBuffers()
         const float y = 0;
         const float x = 0;
         // Pre-calculate physical geometric bounds for this specific quad step
-        float z_left  = (z + 1) * GRID_SIZE;
-        float z_right = z * GRID_SIZE;
+        float z_left  = z * GRID_SIZE;
+        float z_right = (z + 1) * GRID_SIZE;
 
         float y_bottom = y;
         float y_top    = y + GRID_SIZE;
