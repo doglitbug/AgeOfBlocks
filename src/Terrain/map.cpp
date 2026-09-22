@@ -9,7 +9,7 @@ void map::populateBuffers()
 
     //Build walls
     std::vector<vertex> vertices;
-    vertices.reserve(size * 2 * 6);
+    vertices.reserve(size * 4 * 6);
 
     constexpr auto t00 = glm::vec2(0.0f, 0.0f); // Bottom left
     constexpr auto t01 = glm::vec2(0.0f, 1.0f); // Top left
@@ -63,8 +63,50 @@ void map::populateBuffers()
     }
 
     //South wall
+    for (int x = size-1; x >= 0; --x)
+    {
+        const float y = 0;
+        const float z = 0; // Constant depth
+        // Pre-calculate physical geometric bounds for this specific quad step
+        float x_left  = (x + 1) * GRID_SIZE;
+        float x_right = x * GRID_SIZE;
+
+        float y_bottom = y;
+        float y_top    = y + GRID_SIZE;
+
+        // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
+        vertices.push_back(vertex(glm::vec3(x_left,  y_bottom, z), t00));
+        vertices.push_back(vertex(glm::vec3(x_left,  y_top,    z), t01));
+        vertices.push_back(vertex(glm::vec3(x_right, y_top,    z), t11)); // Standard Top-Right mapping
+
+        // Triangle 2: RHS (Bottom-Left -> Top-Right -> Bottom-Right)
+        vertices.push_back(vertex(glm::vec3(x_left,  y_bottom, z), t00));
+        vertices.push_back(vertex(glm::vec3(x_right, y_top,    z), t11));
+        vertices.push_back(vertex(glm::vec3(x_right, y_bottom, z), t10)); // Corrected Bottom-Right mapping
+    }
 
     //West wall
+    for (int z = 0; z < size; ++z)
+    {
+        const float y = 0;
+        const float x = 0;
+        // Pre-calculate physical geometric bounds for this specific quad step
+        float z_left  = (z + 1) * GRID_SIZE;
+        float z_right = z * GRID_SIZE;
+
+        float y_bottom = y;
+        float y_top    = y + GRID_SIZE;
+
+        // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
+        vertices.push_back(vertex(glm::vec3(x,  y_bottom, z_left), t00));
+        vertices.push_back(vertex(glm::vec3(x,  y_top,    z_left), t01));
+        vertices.push_back(vertex(glm::vec3(x, y_top,    z_right), t11)); // Standard Top-Right mapping
+
+        // Triangle 2: RHS (Bottom-Left -> Top-Right -> Bottom-Right)
+        vertices.push_back(vertex(glm::vec3(x,  y_bottom, z_left), t00));
+        vertices.push_back(vertex(glm::vec3(x, y_top,    z_right), t11));
+        vertices.push_back(vertex(glm::vec3(x, y_bottom, z_right), t10)); // Corrected Bottom-Right mapping
+    }
 
     //Build ground TODO
 
@@ -91,7 +133,7 @@ void map::render()
     //TODO Bind textures
 
     //TODO Dynamic count here
-    glDrawArrays(GL_LINES,0, size*6*2);
+    glDrawArrays(GL_LINES,0, size*6*4);
 
     glBindVertexArray(0);
 }
