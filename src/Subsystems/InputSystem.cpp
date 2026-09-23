@@ -217,6 +217,10 @@ void InputSystem::onKeyChange()
     {
         App::get()->m_meshNumber--;
     }
+    if (getKeyDown(SDL_SCANCODE_Q))
+    {
+        App::get()->quit();
+    }
 }
 
 void InputSystem::onMouseMove(const SDL_Event& event)

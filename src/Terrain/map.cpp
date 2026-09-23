@@ -1,7 +1,5 @@
 #include "map.h"
 
-#include "Utils.h"
-
 void map::populateBuffers()
 {
     glGenVertexArrays(1, &m_VAO);
@@ -16,17 +14,17 @@ void map::populateBuffers()
     constexpr auto t10 = glm::vec2(1.0f, 0.0f); // Bottom right
     constexpr auto t11 = glm::vec2(1.0f, 1.0f); // Top right
 
-    //North wall
+    // Top and bottom of walls
+    constexpr float y_bottom = 0.0f;
+    constexpr float y_top    = y_bottom + GRID_SIZE;
+
+    // North wall
     for (int x = 0; x < size; ++x)
     {
-        const float y = 0;
-        const float z = size * GRID_SIZE; // Constant depth
+        const float z = size * GRID_SIZE;
         // Pre-calculate physical geometric bounds for this specific quad step
         float x_left  = x * GRID_SIZE;
         float x_right = (x + 1) * GRID_SIZE;
-
-        float y_bottom = y;
-        float y_top    = y + GRID_SIZE;
 
         // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
         vertices.push_back(vertex(glm::vec3(x_left,  y_bottom, z), t00));
@@ -39,17 +37,13 @@ void map::populateBuffers()
         vertices.push_back(vertex(glm::vec3(x_right, y_bottom, z), t10)); // Corrected Bottom-Right mapping
     }
 
-    //East wall
+    // East wall
     for (int z = size; z > 0; --z)
     {
-        const float y = 0;
         const float x = size * GRID_SIZE;
         // Pre-calculate physical geometric bounds for this specific quad step
         float z_left  = z * GRID_SIZE;
         float z_right = (z - 1) * GRID_SIZE;
-
-        float y_bottom = y;
-        float y_top    = y + GRID_SIZE;
 
         // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
         vertices.push_back(vertex(glm::vec3(x,  y_bottom, z_left), t00));
@@ -62,17 +56,13 @@ void map::populateBuffers()
         vertices.push_back(vertex(glm::vec3(x, y_bottom, z_right), t10)); // Corrected Bottom-Right mapping
     }
 
-    //South wall
+    // South wall
     for (int x = size; x > 0; --x)
     {
-        const float y = 0;
-        const float z = 0; // Constant depth
+        const float z = 0.0f;
         // Pre-calculate physical geometric bounds for this specific quad step
         float x_left  = x * GRID_SIZE;
         float x_right = (x -1) * GRID_SIZE;
-
-        float y_bottom = y;
-        float y_top    = y + GRID_SIZE;
 
         // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
         vertices.push_back(vertex(glm::vec3(x_left,  y_bottom, z), t00));
@@ -88,14 +78,10 @@ void map::populateBuffers()
     //West wall
     for (int z = 0; z < size; ++z)
     {
-        const float y = 0;
-        const float x = 0;
+        const float x = 0.0f;
         // Pre-calculate physical geometric bounds for this specific quad step
         float z_left  = z * GRID_SIZE;
         float z_right = (z + 1) * GRID_SIZE;
-
-        float y_bottom = y;
-        float y_top    = y + GRID_SIZE;
 
         // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
         vertices.push_back(vertex(glm::vec3(x,  y_bottom, z_left), t00));
