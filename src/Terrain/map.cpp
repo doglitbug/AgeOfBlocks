@@ -112,14 +112,28 @@ void map::populateBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+void map::loadTextures()
+{
+    m_textures.resize(1);
+    auto fullPath = "assets/terrain/RockWall_Texture_01.png";
+    m_textures[0] = new Texture(GL_TEXTURE_2D, fullPath);
+    if (!m_textures[0]->Load())
+    {
+        std::cerr << "Unable to load texture at " << fullPath << std::endl;
+        delete m_textures[0];
+        m_textures[0] = nullptr;
+    }
+}
+
 void map::render()
 {
     glBindVertexArray(m_VAO);
 
     //TODO Bind textures
+    m_textures[0]->Bind(GL_TEXTURE0);
 
     //TODO Dynamic count here
-    glDrawArrays(GL_LINES,0, size*6*4);
+    glDrawArrays(GL_TRIANGLES,0, size*6*4);
 
     glBindVertexArray(0);
 }

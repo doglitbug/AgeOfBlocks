@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "ObjectBase.h"
+#include "Texture.h"
 #include "glm/vec2.hpp"
 
 // Make sure this is a power of 2, for SIMD optimization later on?
@@ -45,6 +46,7 @@ public:
     //TODO Ensure rows/columns are a multiple of CHUNK_SIZE?
     explicit map(const int size = CHUNK_SIZE) : size(size)
     {
+        loadTextures();
     }
 
     void populateBuffers() override;
@@ -71,8 +73,11 @@ public:
     }
 
 private:
+    //TODO Move to parent?
+    void loadTextures();
     int size;
     std::vector<cell> grid;
+    std::vector<Texture *> m_textures;
 };
 
 

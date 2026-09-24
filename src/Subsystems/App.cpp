@@ -62,14 +62,15 @@ void App::init()
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    //glFrontFace(GL_CW); // This doesn't seem to affect the models, check for walls/terrain?
+    glFrontFace(GL_CW); // This doesn't seem to affect the models, check for walls/terrain?
     glCullFace(GL_BACK);
 
     CompileShaders();
 
     m_playerObject.LoadMesh("assets/models/villager.gltf");
     m_NPC.LoadMesh("assets/models/villager.gltf");
-    m_NPC.m_position = glm::vec3(2.0f, 0.0f, 0.0f);
+    m_NPC.m_position = glm::vec3(2.0f, 0.0f, 2.0f);
+    m_playerObject.m_position = glm::vec3(5.0f, 0.0f, 5.0f);
 
     // Only look this up once and save!
     gModelLocation = m_3dShaderProgram.getUniformLocation("model");
@@ -197,7 +198,6 @@ void App::CompileShaders()
 
 void App::RenderScene()
 {
-    glDisable(GL_CULL_FACE);
     m_3dShaderProgram.enable();
 
     // Send the camera stuff to the GPU
