@@ -7,7 +7,7 @@
 #include "InputSystem.h"
 #include "Camera.h"
 #include "ObjectMesh.h"
-#include "ShaderProgram.h"
+#include "../World/CharacterShader.h"
 #include "Terrain/map.h"
 #include "Terrain/shaders/TerrainShader.h"
 
@@ -54,7 +54,7 @@ private:
 
     SDL_GLContext glContext;
 
-    ShaderProgram m_3dShaderProgram;
+    CharacterShader m_3dShaderProgram;
     TerrainShader m_terrainShaderProgram;
 
     GLint gModelLocation;

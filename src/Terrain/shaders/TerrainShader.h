@@ -4,6 +4,6 @@
 class TerrainShader : public BaseShader
 {
 public:
-    TerrainShader(){};
+    TerrainShader()= default;
     void init() override;
 };

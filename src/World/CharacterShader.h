@@ -2,28 +2,25 @@
 #include <string>
 #include <vector>
 
+#include "BaseShader.h"
 #include "glad/glad.h"
 #include "glm/fwd.hpp"
 #include "glm/vec3.hpp"
 
-class ShaderProgram
+class CharacterShader: public BaseShader
 {
 public:
-    ShaderProgram()=default;
-    ~ShaderProgram();
-    void init();
+    CharacterShader()=default;
 
-    void addShader(GLenum shaderType, const char* shaderSource);
-    void finalise();
+
+    void init() override;
+    void finalize() override;
+    void enable() override;
 
     void setAmbientColor(const glm::vec3& ambientColor);
     void setAmbientIntensity(float ambientIntensity);
 
-    [[nodiscard]]
-    GLint getUniformLocation(const std::string &uniformName) const;
-    void enable() const;
-
-    void SetBoneTransform(const uint index, const glm::mat4& transform) const;
+    void SetBoneTransform(uint index, const glm::mat4& transform) const;
 private:
     GLuint m_shaderProgram{};
     std::vector<GLuint> m_shaders;
@@ -41,5 +38,4 @@ private:
     GLint m_lightColorLocation{};
 
     GLuint m_boneLocation[100];
-
 };

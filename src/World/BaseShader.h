@@ -7,7 +7,7 @@
 class BaseShader
 {
 public:
-    BaseShader();
+    BaseShader() = default;
     virtual ~BaseShader();
 
     virtual void init();
@@ -15,13 +15,13 @@ public:
     virtual void enable();
     virtual void finalize();
     GLint getUniformLocation(const std::string &uniformName) const;
-    GLint m_cameraViewLocation;
-    GLint m_cameraProjectionLocation;
+    GLint m_cameraViewLocation{};
+    GLint m_cameraProjectionLocation{};
 
 protected:
     void addShader(GLenum shaderType, const char* shaderSource);
 
 private:
-    GLuint m_shaderProgram;
+    GLuint m_shaderProgram{};
     std::vector<GLuint> m_shaders;
 };

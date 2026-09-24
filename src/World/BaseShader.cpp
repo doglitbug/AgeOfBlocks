@@ -4,10 +4,6 @@
 #include <cstring>
 #include <SDL3/SDL_log.h>
 
-BaseShader::BaseShader()
-{
-}
-
 BaseShader::~BaseShader()
 {
     glDeleteProgram(m_shaderProgram);
@@ -20,7 +16,7 @@ void BaseShader::init()
     if (!m_shaderProgram)
     {
         SDL_Log("Error creating shader program");
-        std::exit(1);
+        exit(1);
     }
 }
 
@@ -61,7 +57,7 @@ void BaseShader::finalize()
     glLinkProgram(m_shaderProgram);
 
     GLint success = 0;
-    GLchar errorLog[1024] = {0};
+    GLchar errorLog[1024];
 
     glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &success);
     if (!success)
