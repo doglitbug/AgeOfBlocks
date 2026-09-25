@@ -17,7 +17,6 @@ public:
     void enable() override;
 
     void setAmbientColor(const glm::vec3& ambientColor);
-    void setAmbientIntensity(float ambientIntensity);
 
     void SetBoneTransform(uint index, const glm::mat4& transform) const;
 private:

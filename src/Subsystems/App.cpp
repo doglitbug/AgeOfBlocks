@@ -65,6 +65,25 @@ void App::init()
     glFrontFace(GL_CW); // This doesn't seem to affect the models, check for walls/terrain?
     glCullFace(GL_BACK);
 
+
+
+
+
+    glGenBuffers(1, &uboShared);
+    glBindBuffer(GL_UNIFORM_BUFFER, uboShared);
+
+    // Allocate enough memory for two mat4 matrices (2 * 64 bytes = 128 bytes)
+    glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    // Define a global binding point slot (e.g., Slot 0) and attach our buffer to it
+    constexpr GLuint bindingPoint = 0;
+    glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, uboShared);
+
+
+
+
+
     CompileShaders();
 
     m_playerObject.LoadMesh("assets/models/villager.gltf");
@@ -74,10 +93,6 @@ void App::init()
 
     // Only look this up once and save!
     gModelLocation = m_3dShaderProgram.getUniformLocation("model");
-
-    // Set up Camera
-    gCameraViewLocation = m_3dShaderProgram.getUniformLocation("view");
-    gCameraProjectionLocation = m_3dShaderProgram.getUniformLocation("projection");
 
     // Texture Sampler
     gSamplerLocation = m_3dShaderProgram.getUniformLocation("gSampler");
@@ -184,9 +199,13 @@ void App::RenderScene()
 
     // Send the camera stuff to the GPU
     auto cameraView = mCamera.getViewMatrix();
-    glUniformMatrix4fv(gCameraViewLocation, 1, GL_FALSE, glm::value_ptr(cameraView));
     auto cameraProjection = mCamera.getProjectionMatrix();
-    glUniformMatrix4fv(gCameraProjectionLocation, 1, GL_FALSE, glm::value_ptr(cameraProjection));
+    glBindBuffer(GL_UNIFORM_BUFFER, uboShared);
+
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(cameraView));
+    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(cameraProjection));
+
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // Send the translation info to the GPU
     // TODO Move to objects render?
@@ -209,9 +228,6 @@ void App::RenderScene()
 
     // Draw the world
     m_terrainShaderProgram.enable();
-    //TODO Pass camera to render function, or should it be cached?
-    glUniformMatrix4fv(m_terrainShaderProgram.m_cameraViewLocation, 1, GL_FALSE, glm::value_ptr(cameraView));
-    glUniformMatrix4fv(m_terrainShaderProgram.m_cameraProjectionLocation, 1, GL_FALSE, glm::value_ptr(cameraProjection));
     m_map->render();
 
     // TODO switch to 2d shader program and render GUI (or put in another function)

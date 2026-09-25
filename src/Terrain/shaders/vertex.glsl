@@ -3,8 +3,10 @@
 layout (location = 0) in vec3 Position;
 layout (location = 1) in vec2 TexCoord;
 
-uniform mat4 view;
-uniform mat4 projection;
+layout (std140) uniform shared {
+    mat4 view;
+    mat4 projection;
+};
 
 out vec2 TexCoord0;
 

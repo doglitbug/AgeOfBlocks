@@ -6,9 +6,12 @@ layout (location = 2) in vec3 aNormal;
 layout (location = 3) in ivec4 aBoneIDs;
 layout (location = 4) in vec4 aWeights;
 
+layout (std140) uniform shared {
+    mat4 view;
+    mat4 projection;
+};
+
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
 
 out vec3 FragPos;
 out vec2 TextureCoord;

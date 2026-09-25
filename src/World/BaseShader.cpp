@@ -81,8 +81,11 @@ void BaseShader::finalize()
         glDeleteShader(shader);
     }
 
-    m_cameraViewLocation = getUniformLocation("view");
-    m_cameraProjectionLocation = getUniformLocation("projection");
+    // Find the index of the uniform block inside this specific shader
+    GLuint blockIndex = glGetUniformBlockIndex(m_shaderProgram, "shared");
+
+    // Link this shader's uniform block to global binding point slot 0
+    glUniformBlockBinding(m_shaderProgram, blockIndex, 0);
 }
 
 GLint BaseShader::getUniformLocation(const std::string& uniformName) const

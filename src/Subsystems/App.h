@@ -58,9 +58,7 @@ private:
     TerrainShader m_terrainShaderProgram;
 
     GLint gModelLocation;
-    GLint gNormalLocation;
-    GLint gCameraViewLocation;
-    GLint gCameraProjectionLocation;
+
     GLint gSamplerLocation;
 
     Texture *pTexture;
@@ -72,4 +70,6 @@ private:
     ObjectMesh m_NPC;
 
     map *m_map;
+
+    GLuint uboShared;
 };
