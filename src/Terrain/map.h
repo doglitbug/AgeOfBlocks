@@ -16,11 +16,13 @@ struct vertex
 {
     glm::vec3 position;
     glm::vec2 textureCoordinate;
+    glm::vec3 normal;
 
-    vertex(const glm::vec3 position, const glm::vec2 textureCoordinate)
+    vertex(const glm::vec3 position, const glm::vec2 textureCoordinate, const glm::vec3 normal)
     {
         this->position = position;
         this->textureCoordinate = textureCoordinate;
+        this->normal = normal;
     }
 };
 enum terrainType

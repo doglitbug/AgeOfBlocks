@@ -22,76 +22,80 @@ void map::populateBuffers()
     for (int x = 0; x < size; ++x)
     {
         const float z = size * GRID_SIZE;
+        auto normal = glm::vec3(0.0f, 0.0f, -1.0f);
         // Pre-calculate physical geometric bounds for this specific quad step
         float x_left  = x * GRID_SIZE;
         float x_right = (x + 1) * GRID_SIZE;
 
         // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
-        vertices.push_back(vertex(glm::vec3(x_left,  y_bottom, z), t00));
-        vertices.push_back(vertex(glm::vec3(x_left,  y_top,    z), t01));
-        vertices.push_back(vertex(glm::vec3(x_right, y_top,    z), t11)); // Standard Top-Right mapping
+        vertices.push_back(vertex(glm::vec3(x_left,  y_bottom, z), t00, normal));
+        vertices.push_back(vertex(glm::vec3(x_left,  y_top,    z), t01, normal));
+        vertices.push_back(vertex(glm::vec3(x_right, y_top,    z), t11, normal)); // Standard Top-Right mapping
 
         // Triangle 2: RHS (Bottom-Left -> Top-Right -> Bottom-Right)
-        vertices.push_back(vertex(glm::vec3(x_left,  y_bottom, z), t00));
-        vertices.push_back(vertex(glm::vec3(x_right, y_top,    z), t11));
-        vertices.push_back(vertex(glm::vec3(x_right, y_bottom, z), t10)); // Corrected Bottom-Right mapping
+        vertices.push_back(vertex(glm::vec3(x_left,  y_bottom, z), t00, normal));
+        vertices.push_back(vertex(glm::vec3(x_right, y_top,    z), t11, normal));
+        vertices.push_back(vertex(glm::vec3(x_right, y_bottom, z), t10, normal)); // Corrected Bottom-Right mapping
     }
 
     // East wall
     for (int z = size; z > 0; --z)
     {
         const float x = size * GRID_SIZE;
+        auto normal = glm::vec3(-1.0f, 0.0f, 0.0f);
         // Pre-calculate physical geometric bounds for this specific quad step
         float z_left  = z * GRID_SIZE;
         float z_right = (z - 1) * GRID_SIZE;
 
         // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
-        vertices.push_back(vertex(glm::vec3(x,  y_bottom, z_left), t00));
-        vertices.push_back(vertex(glm::vec3(x,  y_top,    z_left), t01));
-        vertices.push_back(vertex(glm::vec3(x, y_top,    z_right), t11)); // Standard Top-Right mapping
+        vertices.push_back(vertex(glm::vec3(x,  y_bottom, z_left), t00, normal));
+        vertices.push_back(vertex(glm::vec3(x,  y_top,    z_left), t01, normal));
+        vertices.push_back(vertex(glm::vec3(x, y_top,    z_right), t11, normal)); // Standard Top-Right mapping
 
         // Triangle 2: RHS (Bottom-Left -> Top-Right -> Bottom-Right)
-        vertices.push_back(vertex(glm::vec3(x,  y_bottom, z_left), t00));
-        vertices.push_back(vertex(glm::vec3(x, y_top,    z_right), t11));
-        vertices.push_back(vertex(glm::vec3(x, y_bottom, z_right), t10)); // Corrected Bottom-Right mapping
+        vertices.push_back(vertex(glm::vec3(x,  y_bottom, z_left), t00, normal));
+        vertices.push_back(vertex(glm::vec3(x, y_top,    z_right), t11, normal));
+        vertices.push_back(vertex(glm::vec3(x, y_bottom, z_right), t10, normal)); // Corrected Bottom-Right mapping
     }
 
     // South wall
     for (int x = size; x > 0; --x)
     {
         const float z = 0.0f;
+        auto normal = glm::vec3(0.0f, 0.0f, 1.0f);
         // Pre-calculate physical geometric bounds for this specific quad step
         float x_left  = x * GRID_SIZE;
         float x_right = (x -1) * GRID_SIZE;
 
         // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
-        vertices.push_back(vertex(glm::vec3(x_left,  y_bottom, z), t00));
-        vertices.push_back(vertex(glm::vec3(x_left,  y_top,    z), t01));
-        vertices.push_back(vertex(glm::vec3(x_right, y_top,    z), t11)); // Standard Top-Right mapping
+        vertices.push_back(vertex(glm::vec3(x_left,  y_bottom, z), t00, normal));
+        vertices.push_back(vertex(glm::vec3(x_left,  y_top,    z), t01, normal));
+        vertices.push_back(vertex(glm::vec3(x_right, y_top,    z), t11, normal)); // Standard Top-Right mapping
 
         // Triangle 2: RHS (Bottom-Left -> Top-Right -> Bottom-Right)
-        vertices.push_back(vertex(glm::vec3(x_left,  y_bottom, z), t00));
-        vertices.push_back(vertex(glm::vec3(x_right, y_top,    z), t11));
-        vertices.push_back(vertex(glm::vec3(x_right, y_bottom, z), t10)); // Corrected Bottom-Right mapping
+        vertices.push_back(vertex(glm::vec3(x_left,  y_bottom, z), t00, normal));
+        vertices.push_back(vertex(glm::vec3(x_right, y_top,    z), t11, normal));
+        vertices.push_back(vertex(glm::vec3(x_right, y_bottom, z), t10, normal)); // Corrected Bottom-Right mapping
     }
 
     //West wall
     for (int z = 0; z < size; ++z)
     {
         const float x = 0.0f;
+        auto normal = glm::vec3(1.0f, 0.0f, 0.0f);
         // Pre-calculate physical geometric bounds for this specific quad step
         float z_left  = z * GRID_SIZE;
         float z_right = (z + 1) * GRID_SIZE;
 
         // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
-        vertices.push_back(vertex(glm::vec3(x,  y_bottom, z_left), t00));
-        vertices.push_back(vertex(glm::vec3(x,  y_top,    z_left), t01));
-        vertices.push_back(vertex(glm::vec3(x, y_top,    z_right), t11)); // Standard Top-Right mapping
+        vertices.push_back(vertex(glm::vec3(x,  y_bottom, z_left), t00, normal));
+        vertices.push_back(vertex(glm::vec3(x,  y_top,    z_left), t01, normal));
+        vertices.push_back(vertex(glm::vec3(x, y_top,    z_right), t11, normal)); // Standard Top-Right mapping
 
         // Triangle 2: RHS (Bottom-Left -> Top-Right -> Bottom-Right)
-        vertices.push_back(vertex(glm::vec3(x,  y_bottom, z_left), t00));
-        vertices.push_back(vertex(glm::vec3(x, y_top,    z_right), t11));
-        vertices.push_back(vertex(glm::vec3(x, y_bottom, z_right), t10)); // Corrected Bottom-Right mapping
+        vertices.push_back(vertex(glm::vec3(x,  y_bottom, z_left), t00, normal));
+        vertices.push_back(vertex(glm::vec3(x, y_top,    z_right), t11, normal));
+        vertices.push_back(vertex(glm::vec3(x, y_bottom, z_right), t10, normal)); // Corrected Bottom-Right mapping
     }
 
     //Build ground TODO
@@ -102,11 +106,15 @@ void map::populateBuffers()
 
     // position
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), nullptr);
 
     // tex coords
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), reinterpret_cast<void*>(sizeof(glm::vec3)));
+
+    // normals
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, sizeof(vertex), reinterpret_cast<void*>(sizeof(glm::vec3)+sizeof(glm::vec2)));
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);

@@ -67,29 +67,28 @@ void App::init()
 
 
 
+    glGenBuffers(2, ubos);
 
+    // 2. Configure the first UBO: viewUniform
+    glBindBuffer(GL_UNIFORM_BUFFER, ubos[0]);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(viewStruct), nullptr, GL_STATIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubos[0]); // Attach to Binding Point 0
 
-    glGenBuffers(1, &uboShared);
-    glBindBuffer(GL_UNIFORM_BUFFER, uboShared);
+    // 3. Configure the second UBO: lightingUniform
+    glBindBuffer(GL_UNIFORM_BUFFER, ubos[1]);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(lightingStruct), nullptr, GL_STATIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubos[1]); // Attach to Binding Point 1
 
-    // Allocate enough memory for two mat4 matrices (2 * 64 bytes = 128 bytes)
-    glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
+    // 4. Unbind the buffer target
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    // Define a global binding point slot (e.g., Slot 0) and attach our buffer to it
-    constexpr GLuint bindingPoint = 0;
-    glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, uboShared);
-
-
-
-
 
     CompileShaders();
 
     m_playerObject.LoadMesh("assets/models/villager.gltf");
+    m_playerObject.m_position = glm::vec3(5.0f, 0.0f, 5.0f);
+
     m_NPC.LoadMesh("assets/models/villager.gltf");
     m_NPC.m_position = glm::vec3(2.0f, 0.0f, 2.0f);
-    m_playerObject.m_position = glm::vec3(5.0f, 0.0f, 5.0f);
 
     // Only look this up once and save!
     gModelLocation = m_3dShaderProgram.getUniformLocation("model");
@@ -151,6 +150,9 @@ void App::update(const float deltaTime)
     mCamera.move(m_pInput->getMovement() * deltaTime * 10.0f);
     // TODO Mouse movement would need to rotate the player object too.
     mCamera.mouseLook(m_pInput->getMouseMovement() * deltaTime);
+
+
+    UpdateDayNightCycle(deltaTime);
 }
 
 void App::render()
@@ -194,18 +196,25 @@ void App::CompileShaders()
 
 void App::RenderScene()
 {
-    m_3dShaderProgram.enable();
-
     // Send the camera stuff to the GPU
-    auto cameraView = mCamera.getViewMatrix();
-    auto cameraProjection = mCamera.getProjectionMatrix();
-    glBindBuffer(GL_UNIFORM_BUFFER, uboShared);
+    mViewStruct.view = mCamera.getViewMatrix();
+    mViewStruct.projection = mCamera.getProjectionMatrix();
 
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(cameraView));
-    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(cameraProjection));
+    glBindBuffer(GL_UNIFORM_BUFFER, ubos[0]);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(viewStruct), &mViewStruct);
+
+    // Send lighting stuff to the GPU
+
+    glBindBuffer(GL_UNIFORM_BUFFER, ubos[1]);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(lightingStruct), &mLightingStruct);
 
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+
+
+
+
+    m_3dShaderProgram.enable();
     // Send the translation info to the GPU
     // TODO Move to objects render?
     glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_playerObject.GetWorldMatrix()));
@@ -230,5 +239,61 @@ void App::RenderScene()
     m_map->render();
 
     // TODO switch to 2d shader program and render GUI (or put in another function)
-    SDL_Log("Camera position (x,y,z): (%f,%f,%f)", mCamera.m_position.x, mCamera.m_position.y, mCamera.m_position.z);
+    //SDL_Log("Camera position (x,y,z): (%f,%f,%f)", mCamera.m_position.x, mCamera.m_position.y, mCamera.m_position.z);
+    SDL_Log("Current time: (%f)", timeOfDay);
+}
+
+void App::UpdateDayNightCycle(float deltaTime) {
+    // 1. Advance time and wrap around 1.0 (24 hours)
+    //TODO Advance
+    timeOfDay += deltaTime / DAY_DURATION_SECONDS;
+    if (timeOfDay > 1.0f) timeOfDay -= 1.0f;
+
+    // 2. Calculate Sun Direction (Orbiting around the Z or X axis)
+    float angle = timeOfDay * 2.0f * 3.14159265f;
+    glm::vec3 lightDir = { std::cos(angle), std::sin(angle), 0.0f }; // Sun rises/sets along X/Y plane
+
+    // 3. Define Colors for Times of Day
+    glm::vec3 nightColor   = { 0.05f, 0.05f, 0.1f };
+    glm::vec3 sunriseColor = { 0.9f, 0.4f, 0.2f };
+    glm::vec3 dayColor     = { 1.0f, 1.0f, 0.9f };
+    glm::vec3 sunsetColor  = { 0.8f, 0.3f, 0.3f };
+
+    glm::vec3 nightAmbient   = { 0.02f, 0.02f, 0.05f };
+    glm::vec3 dayAmbient     = { 0.2f, 0.2f, 0.25f };
+
+    glm::vec3 currentLightColor = { 0.0f, 0.0f, 0.0f };
+    glm::vec3 currentAmbient = nightAmbient;
+
+    // 4. Interpolate based on time ranges
+    if (timeOfDay >= 0.0f && timeOfDay < 0.2f) { // Night to Dawn
+        float t = timeOfDay / 0.2f;
+        currentLightColor = glm::mix(nightColor, sunriseColor, t);
+        currentAmbient = glm::mix(nightAmbient, dayAmbient, t);
+    }
+    else if (timeOfDay >= 0.2f && timeOfDay < 0.5f) { // Dawn to Noon
+        float t = (timeOfDay - 0.2f) / 0.3f;
+        currentLightColor = glm::mix(sunriseColor, dayColor, t);
+        currentAmbient = dayAmbient;
+    }
+    else if (timeOfDay >= 0.5f && timeOfDay < 0.75f) { // Noon to Dusk
+        float t = (timeOfDay - 0.5f) / 0.25f;
+        currentLightColor = glm::mix(dayColor, sunsetColor, t);
+        currentAmbient = dayAmbient;
+    }
+    else { // Dusk to Night
+        float t = (timeOfDay - 0.75f) / 0.25f;
+        currentLightColor = glm::mix(sunsetColor, nightColor, t);
+        currentAmbient = glm::mix(dayAmbient, nightAmbient, t);
+    }
+
+    // Fade out light intensity completely when sun goes below horizon (under the ground)
+    if (lightDir.y < 0.0f) {
+        currentLightColor = { 0.0f, 0.0f, 0.0f }; // Only ambient light left at night
+    }
+
+    // 5. Send data to the shader programs
+    mLightingStruct.ambientColor = currentAmbient;
+    mLightingStruct.lightDirection = lightDir;
+    mLightingStruct.lightColor = currentLightColor;
 }

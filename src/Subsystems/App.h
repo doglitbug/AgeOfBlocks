@@ -71,5 +71,25 @@ private:
 
     map *m_map;
 
-    GLuint uboShared;
+    GLuint ubos[2];
+
+    struct viewStruct
+    {
+        glm::mat4 view;
+        glm::mat4 projection;
+    } mViewStruct;
+
+    struct lightingStruct
+    {
+        glm::vec3 ambientColor;
+        float _pad0;
+        glm::vec3 lightDirection;
+        float _pad1;
+        glm::vec3 lightColor;
+        float _pad2;
+    } mLightingStruct;
+
+    const float DAY_DURATION_SECONDS = 10.0f;
+    float timeOfDay = 0.5f;
+    void UpdateDayNightCycle(float deltaTime);
 };

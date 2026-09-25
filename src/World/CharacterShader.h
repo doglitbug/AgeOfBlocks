@@ -16,22 +16,10 @@ public:
     void finalize() override;
     void enable() override;
 
-    void setAmbientColor(const glm::vec3& ambientColor);
-
     void SetBoneTransform(uint index, const glm::mat4& transform) const;
 private:
     GLuint m_shaderProgram{};
     std::vector<GLuint> m_shaders;
-
-    // Ambient color information
-    glm::vec3 m_ambientColor=glm::vec3(0.54f, 0.57f, 0.6f);
-    GLint m_ambientColorLocation{};
-
-    // Diffuse color information
-    glm::vec3 m_lightPosition=glm::vec3(1.0f, 1.0f, 0.0f);
-    glm::vec3 m_lightColor=glm::vec3(0.2f, 0.2f, 0.8f);
-    GLint m_lightPositionLocation{};
-    GLint m_lightColorLocation{};
 
     GLuint m_boneLocation[100];
 };
