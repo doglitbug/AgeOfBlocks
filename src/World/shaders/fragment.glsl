@@ -3,18 +3,14 @@
 in vec2 TextureCoord;
 in vec3 FragPos;
 in vec3 Normal;
-flat in ivec4 BoneIds;
-in vec4 Weights;
 
 out vec4 FragColor;
 
 uniform sampler2D gSampler;
-uniform vec3 ambientColor;
 
+uniform vec3 ambientColor;
 uniform vec3 lightPosition;
 uniform vec3 lightColor;
-
-uniform vec3 gNormal;
 
 void main()
 {

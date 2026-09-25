@@ -93,7 +93,6 @@ void App::init()
 
     // Only look this up once and save!
     gModelLocation = m_3dShaderProgram.getUniformLocation("model");
-
     // Texture Sampler
     gSamplerLocation = m_3dShaderProgram.getUniformLocation("gSampler");
 

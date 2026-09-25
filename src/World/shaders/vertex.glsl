@@ -13,15 +13,14 @@ layout (std140) uniform shared {
 
 uniform mat4 model;
 
-out vec3 FragPos;
 out vec2 TextureCoord;
+out vec3 FragPos;
 out vec3 Normal;
-flat out ivec4 BoneIDs;
-out vec4 Weights;
 
 const int MAX_BONES = 100;
 
 uniform mat4 gBones[MAX_BONES];
+
 void main()
 {
     mat4 BoneTransform = gBones[aBoneIDs[0]] * aWeights[0];
@@ -36,7 +35,4 @@ void main()
 
     TextureCoord = aTextureCoord;
     Normal = normalize(mat3(model) * aNormal);
-
-    BoneIDs = aBoneIDs;
-    Weights = aWeights;
 }
