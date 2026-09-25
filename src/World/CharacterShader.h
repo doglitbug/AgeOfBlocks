@@ -11,8 +11,7 @@ class CharacterShader: public BaseShader
 {
 public:
     CharacterShader()=default;
-
-
+    
     void init() override;
     void finalize() override;
     void enable() override;
@@ -26,10 +25,8 @@ private:
     std::vector<GLuint> m_shaders;
 
     // Ambient color information
-    glm::vec3 m_ambientColor=glm::vec3(0.9f, 0.95f, 1.0f);
-    float m_ambientIntensity=0.6f;
+    glm::vec3 m_ambientColor=glm::vec3(0.54f, 0.57f, 0.6f);
     GLint m_ambientColorLocation{};
-    GLint m_ambientIntensityLocation{};
 
     // Diffuse color information
     glm::vec3 m_lightPosition=glm::vec3(1.0f, 1.0f, 0.0f);

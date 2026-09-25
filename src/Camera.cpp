@@ -47,8 +47,8 @@ void Camera::mouseLook(glm::vec2 look)
         //look.y = 0.0f;
     }
 
-    yaw -= look.x * 10.0f;// TODO Sensitivity setting for both axis
-    pitch += look.y * 10.0f;// TODO invert Y setting here
+    yaw -= look.x * 15.0f;// TODO Sensitivity setting for both axis
+    pitch += look.y * 15.0f;// TODO invert Y setting here
 
     // Clamp pitch to prevent flipping
     if (pitch > 89.0f)

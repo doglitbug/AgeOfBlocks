@@ -10,7 +10,6 @@ out vec4 FragColor;
 
 uniform sampler2D gSampler;
 uniform vec3 ambientColor;
-uniform float ambientIntensity;
 
 uniform vec3 lightPosition;
 uniform vec3 lightColor;
@@ -25,11 +24,9 @@ void main()
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
 
-    vec3 ambient = ambientIntensity * ambientColor;
-
     vec4 texColor = texture(gSampler, TextureCoord);
 
-    vec3 result = (ambient + diffuse) * texColor.rgb;
+    vec3 result = (ambientColor + diffuse) * texColor.rgb;
 
     // 4. Output the final color, preserving the original texture alpha channel
     FragColor = vec4(result, texColor.a);
