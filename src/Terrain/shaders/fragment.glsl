@@ -2,6 +2,7 @@
 
 in vec2 TextureCoord;
 in vec3 Normal;
+flat in int TerrainIndex;
 
 layout (std140) uniform lightingUniform {
     vec3 ambientColor;
@@ -14,14 +15,14 @@ layout (std140) uniform lightingUniform {
 
 out vec4 FragColor;
 
-uniform sampler2D gSampler;
+uniform sampler2DArray textureArray;
 
 void main()
 {
     vec3 norm = normalize(Normal);
     vec3 negLightDirection = normalize(-lightDirection);
 
-    vec4 texColor = texture(gSampler, TextureCoord);
+    vec4 texColor = texture(textureArray, vec3(TextureCoord, float(TerrainIndex)));
 
     vec3 ambient = ambientColor * texColor.rgb;
 

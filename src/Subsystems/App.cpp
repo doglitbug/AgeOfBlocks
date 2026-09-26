@@ -250,8 +250,8 @@ void App::UpdateDayNightCycle(float deltaTime) {
     if (timeOfDay > 1.0f) timeOfDay -= 1.0f;
 
     // 2. Calculate Sun Direction (Orbiting around the Z or X axis)
-    float angle = timeOfDay * 2.0f * 3.14159265f;
-    glm::vec3 lightDir = { std::cos(angle), std::sin(angle), 0.0f }; // Sun rises/sets along X/Y plane
+    float angle = (timeOfDay * 2.0f * 3.14159265f) - 1.57079632f;
+    glm::vec3 sunPosition = { std::cos(angle), std::sin(angle), 0.0f }; // Sun rises/sets along X/Y plane
 
     // 3. Define Colors for Times of Day
     glm::vec3 nightColor   = { 0.05f, 0.05f, 0.1f };
@@ -288,12 +288,12 @@ void App::UpdateDayNightCycle(float deltaTime) {
     }
 
     // Fade out light intensity completely when sun goes below horizon (under the ground)
-    if (lightDir.y < 0.0f) {
+    if (sunPosition.y < 0.0f) {
         currentLightColor = { 0.0f, 0.0f, 0.0f }; // Only ambient light left at night
     }
 
     // 5. Send data to the shader programs
     mLightingStruct.ambientColor = currentAmbient;
-    mLightingStruct.lightDirection = lightDir;
+    mLightingStruct.lightDirection = -sunPosition;
     mLightingStruct.lightColor = currentLightColor;
 }

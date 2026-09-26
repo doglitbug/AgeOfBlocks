@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "ObjectBase.h"
-#include "Texture.h"
+#include "TextureArray.h"
 #include "glm/vec2.hpp"
 
 // Make sure this is a power of 2, for SIMD optimization later on?
@@ -12,22 +12,14 @@
 // Scale grid size, in case 1 unit is too small
 #define GRID_SIZE 2.0f
 
-struct vertex
-{
-    glm::vec3 position;
-    glm::vec2 textureCoordinate;
-    glm::vec3 normal;
+#define t00 glm::vec2(0.0f, 0.0f) // Bottom left
+#define t01 glm::vec2(0.0f, 1.0f) // Top left
+#define t10 glm::vec2(1.0f, 0.0f) // Bottom right
+#define t11 glm::vec2(1.0f, 1.0f) // Top right
 
-    vertex(const glm::vec3 position, const glm::vec2 textureCoordinate, const glm::vec3 normal)
-    {
-        this->position = position;
-        this->textureCoordinate = textureCoordinate;
-        this->normal = normal;
-    }
-};
 enum terrainType
 {
-    OutOfBounds,
+    MapEdge = 0,
     Grass,
     Sand
 };
@@ -40,7 +32,23 @@ struct cell
     bool isBuildable;
 };
 
-static constexpr cell OutOfBoundsCell{OutOfBounds, 10, false, false};
+struct vertex
+{
+    glm::vec3 position{};
+    glm::vec2 textureCoordinate{};
+    glm::vec3 normal{};
+    int terrainType{};
+
+    vertex(const glm::vec3 position, const glm::vec2 textureCoordinate, const glm::vec3 normal, const int terrainType)
+    {
+        this->position = position;
+        this->textureCoordinate = textureCoordinate;
+        this->normal = normal;
+        this->terrainType = terrainType;
+    }
+};
+
+static constexpr cell OutOfBoundsCell{MapEdge, 10, false, false};
 
 class map : public ObjectBase
 {
@@ -67,19 +75,20 @@ public:
     // Read only
     const cell& operator()(const int row, const int col) const
     {
-        // if (row < 0 || row > rows || col < 0 || col > cols)
-        // {
-        //     return OutOfBoundsCell; // TODO Do we need this, or replace with assert?
-        // }
         return grid[row * size + col];
     }
 
 private:
+    void generateWallVertices();
+    void generateGroundVertices();
     //TODO Move to parent?
     void loadTextures();
     int size;
     std::vector<cell> grid;
-    std::vector<Texture *> m_textures;
+    TextureArray *m_textureArray;
+    // Global because they will likely change due to height during game play?
+    std::vector<vertex> wallVertices;
+    std::vector<vertex> groundVertices;
 };
 
 

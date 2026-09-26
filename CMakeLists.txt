@@ -30,6 +30,8 @@ add_executable(${PROJECT_NAME}
         src/World/BaseShader.cpp
         src/World/BaseShader.h
         src/Utils.h
+        src/World/TextureArray.cpp
+        src/World/TextureArray.h
 )
 
 # Include Directories
