@@ -24,6 +24,6 @@ private:
      * Populate mStringTable with the current language's strings
      */
     void loadLanguage();
-    std::string mCurrentLanguage;
-    std::unordered_map<std::string, std::string> mStringTable;
+    std::string m_currentLanguage;
+    std::unordered_map<std::string, std::string> m_stringTable;
 };

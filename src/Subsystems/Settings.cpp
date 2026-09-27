@@ -65,7 +65,7 @@ void Settings::reset()
     setGameMusicVolume(5);
     setGameVolume(75);
     setFullScreen(false);
-    setResolution(800, 600);
+    setResolution(1920, 1080);
     setLanguage("en_US");
 
     // TODO Will probably need a dedicated function for resetting keybindings?

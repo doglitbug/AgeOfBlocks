@@ -45,7 +45,6 @@ void map::populateBuffers()
                            reinterpret_cast<const void*>(offsetof(vertex, terrainType)));
 
 
-
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -188,7 +187,7 @@ void map::loadTextures()
     const std::vector<std::string> filenames = {
         "RockWall_Texture_01.png",
         "Grass_Clovers_Texture_01.png",
-         "Sand_Texture_01.png"
+        "Sand_Texture_01.png"
     };
 
     m_textureArray = new TextureArray(terrainPath, filenames);
@@ -215,8 +214,8 @@ void map::generateMap()
         for (int x = 0; x < size; ++x)
         {
             auto terrainType = Grass;
-            if (x<2 || z < 2) { terrainType = Sand; }
-            (*this)(z,x) = cell(terrainType, 0, true, true);
+            if (x < 2 || z < 2) { terrainType = Sand; }
+            (*this)(z, x) = cell(terrainType, 0, true, true);
         }
     }
 }

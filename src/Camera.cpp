@@ -6,7 +6,7 @@
 
 Camera::Camera()
 {
-    m_position = glm::vec3(0.0f, 1.5f, 5.0f);
+    m_position = glm::vec3(4.0f, 1.5f, 11.0f);
     m_direction = glm::vec3(0.0f, 0.0f, -1.0f);//Not important for starting value
     m_up = glm::vec3(0.0f, 1.0f, 0.0f);
     pitch = 0.0f;

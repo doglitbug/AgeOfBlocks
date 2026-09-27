@@ -1,21 +1,25 @@
 #include "Language.h"
 
+#include "App.h"
+
 Language::Language()
 {
-    //TODO Load language csv
+    m_currentLanguage = App::get()->getSettings()->getLanguage();
+    loadLanguage();
 }
 
-void Language::onNotify(const std::string& message, MyType newValue)
+void Language::onNotify(const std::string& message, const MyType newValue)
 {
     if (message == "LANGUAGE")
     {
-        mCurrentLanguage = std::get<std::string>(newValue);
+        m_currentLanguage = std::get<std::string>(newValue);
     }
 }
 
 std::string Language::get(const std::string& key)
 {
-    if (const auto it = mStringTable.find(key); it != mStringTable.end()) {
+    if (const auto it = m_stringTable.find(key); it != m_stringTable.end())
+    {
         return it->second;
     }
     return "MISSING_STRING: " + key;
@@ -23,6 +27,9 @@ std::string Language::get(const std::string& key)
 
 void Language::loadLanguage()
 {
-    mStringTable.clear();
-    
+    m_stringTable.clear();
+    //TODO Mock data is here, go load from file!
+    m_stringTable["LANGUAGE"] = "English";
+    m_stringTable["MENU_SETTINGS"] = "Settings";
+    m_stringTable["MENU_QUIT"] = "Quit";
 }

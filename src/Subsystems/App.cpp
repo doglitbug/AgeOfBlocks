@@ -109,7 +109,7 @@ void App::init()
     SDL_SetWindowRelativeMouseMode(m_pWindow, true);
 
 
-    m_map = new map(128);
+    m_map = new map(64);
     m_map->generateMap();
     m_map->populateBuffers();
 
@@ -123,7 +123,7 @@ void App::init()
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL3_InitForOpenGL(m_pWindow, glContext);
-    ImGui_ImplOpenGL3_Init("#version 330");
+    ImGui_ImplOpenGL3_Init("#version 130");
 
     m_bRunning = true;
 }
@@ -335,6 +335,7 @@ void App::DrawHud()
     ImGui::Begin("Debug menu");
     ImGui::Text("Current time of day: %f", timeOfDay);
     ImGui::Text("Camera position (x,y,z): %f %f %f", mCamera.m_position.x, mCamera.m_position.y, mCamera.m_position.z);
+    ImGui::Text("Current language: %s", m_pLanguage->get("LANGUAGE").c_str());
     ImGui::End();
 
     // Rendering
