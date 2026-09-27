@@ -66,6 +66,7 @@ void Settings::reset()
     setGameVolume(75);
     setFullScreen(false);
     setResolution(800, 600);
+    setLanguage("en_US");
 
     // TODO Will probably need a dedicated function for resetting keybindings?
 }
@@ -122,5 +123,18 @@ void Settings::setResolution(const int width, const int height)
 glm::ivec2 Settings::getResolution() const
 {
     return glm::ivec2{m_settings.screenWidth, m_settings.screenHeight};
+}
+// endregion
+
+// region Language
+std::string Settings::getLanguage() const
+{
+    return m_settings.language;
+}
+
+void Settings::setLanguage(const std::string& language)
+{
+    m_settings.language = language;
+    notifyObservers("LANGUAGE", language);
 };
 // endregion

@@ -42,13 +42,9 @@ void Camera::move(const glm::vec2 movement)
 
 void Camera::mouseLook(glm::vec2 look)
 {
-    // Up/down dead-zone
-    if (std::abs(look.y) < 0.02f){
-        //look.y = 0.0f;
-    }
-
-    yaw -= look.x * 15.0f;// TODO Sensitivity setting for both axis
-    pitch += look.y * 15.0f;// TODO invert Y setting here
+    //TODO this is kinda jerky at this speed, need to fix smoothness
+    yaw -= look.x * 50.0f;// TODO Sensitivity setting for both axis
+    pitch += look.y * 50.0f;// TODO invert Y setting here
 
     // Clamp pitch to prevent flipping
     if (pitch > 89.0f)

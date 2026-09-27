@@ -11,6 +11,18 @@ find_package(SDL3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(assimp REQUIRED)
 
+set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/imgui)
+set(IMGUI_SRCS
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_demo.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+        # Include the specific SDL3 and OpenGL3 backend implementations
+        ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
 # Define Executable
 file(GLOB_RECURSE SOURCES
     "src/*.cpp"
@@ -25,18 +37,14 @@ file(GLOB_RECURSE SOURCES
 add_executable(${PROJECT_NAME} 
     ${SOURCES}
     "include/glad/glad.c"
-        src/Terrain/shaders/TerrainShader.cpp
-        src/Terrain/shaders/TerrainShader.h
-        src/World/BaseShader.cpp
-        src/World/BaseShader.h
-        src/Utils.h
-        src/World/TextureArray.cpp
-        src/World/TextureArray.h
+    ${IMGUI_SRCS}
 )
 
 # Include Directories
 target_include_directories(${PROJECT_NAME} PRIVATE
     "include/"
+    ${IMGUI_DIR}
+    ${IMGUI_DIR}/backends
     "src"
     "src/Subsystems/"
     "src/World/"

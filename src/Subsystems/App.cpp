@@ -21,6 +21,10 @@ void App::init()
     m_pSettings = new Settings();
     m_pSettings->addObserver(this);
 
+    // Language/localization
+    m_pLanguage = new Language();
+    m_pSettings->addObserver(m_pLanguage);
+
     // Attempt to initialize SDL
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     {
@@ -66,7 +70,6 @@ void App::init()
     glCullFace(GL_BACK);
 
 
-
     glGenBuffers(2, ubos);
 
     // 2. Configure the first UBO: viewUniform
@@ -101,13 +104,26 @@ void App::init()
     m_pInput->initializeGamepads();
     m_pInput->initializeMouse();
 
+
     SDL_WarpMouseInWindow(m_pWindow, screenResolution.x / 2, screenResolution.y / 2);
     SDL_SetWindowRelativeMouseMode(m_pWindow, true);
 
 
-    m_map = new map(10);
+    m_map = new map(128);
     m_map->generateMap();
     m_map->populateBuffers();
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL3_InitForOpenGL(m_pWindow, glContext);
+    ImGui_ImplOpenGL3_Init("#version 330");
 
     m_bRunning = true;
 }
@@ -151,7 +167,6 @@ void App::update(const float deltaTime)
     // TODO Mouse movement would need to rotate the player object too.
     mCamera.mouseLook(m_pInput->getMouseMovement() * deltaTime);
 
-
     UpdateDayNightCycle(deltaTime);
 }
 
@@ -183,6 +198,10 @@ void App::setResolution(const int width, const int height, const bool resize)
 
 App::~App()
 {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
+
     SDL_GL_DestroyContext(glContext);
     SDL_DestroyWindow(m_pWindow);
     SDL_Quit();
@@ -211,9 +230,6 @@ void App::RenderScene()
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 
-
-
-
     m_3dShaderProgram.enable();
     // Send the translation info to the GPU
     // TODO Move to objects render?
@@ -223,7 +239,8 @@ void App::RenderScene()
     //TODO Remove second parameter...or keep for poses?
     m_playerObject.GetBoneTransforms(transforms, m_playerObject.m_animationTime);
 
-    for (uint i = 0 ; i < transforms.size() ; i++) {
+    for (uint i = 0; i < transforms.size(); i++)
+    {
         //TODO Split up the shader program and use polymorphism
         m_3dShaderProgram.SetBoneTransform(i, transforms[i]);
     }
@@ -233,67 +250,95 @@ void App::RenderScene()
     m_NPC.Render(21);
 
 
-
     // Draw the world
     m_terrainShaderProgram.enable();
     m_map->render();
 
     // TODO switch to 2d shader program and render GUI (or put in another function)
-    //SDL_Log("Camera position (x,y,z): (%f,%f,%f)", mCamera.m_position.x, mCamera.m_position.y, mCamera.m_position.z);
-    SDL_Log("Current time: (%f)", timeOfDay);
+    DrawHud();
 }
 
-void App::UpdateDayNightCycle(float deltaTime) {
+void App::UpdateDayNightCycle(float deltaTime)
+{
     // 1. Advance time and wrap around 1.0 (24 hours)
     //TODO Advance
-    timeOfDay += deltaTime / DAY_DURATION_SECONDS;
+    //timeOfDay += deltaTime / DAY_DURATION_SECONDS;
     if (timeOfDay > 1.0f) timeOfDay -= 1.0f;
 
     // 2. Calculate Sun Direction (Orbiting around the Z or X axis)
     float angle = (timeOfDay * 2.0f * 3.14159265f) - 1.57079632f;
-    glm::vec3 sunPosition = { std::cos(angle), std::sin(angle), 0.0f }; // Sun rises/sets along X/Y plane
+    glm::vec3 sunPosition = {std::cos(angle) * 1.0f, std::sin(angle) * 1.0f, 0.0f}; // Sun rises/sets along X/Y plane
 
     // 3. Define Colors for Times of Day
-    glm::vec3 nightColor   = { 0.05f, 0.05f, 0.1f };
-    glm::vec3 sunriseColor = { 0.9f, 0.4f, 0.2f };
-    glm::vec3 dayColor     = { 1.0f, 1.0f, 0.9f };
-    glm::vec3 sunsetColor  = { 0.8f, 0.3f, 0.3f };
+    glm::vec3 nightColor = {0.05f, 0.05f, 0.1f};
+    glm::vec3 sunriseColor = {0.9f, 0.4f, 0.2f};
+    glm::vec3 dayColor = {1.0f, 1.0f, 0.9f};
+    glm::vec3 sunsetColor = {0.8f, 0.3f, 0.3f};
 
-    glm::vec3 nightAmbient   = { 0.02f, 0.02f, 0.05f };
-    glm::vec3 dayAmbient     = { 0.2f, 0.2f, 0.25f };
+    glm::vec3 nightAmbient = {0.02f, 0.02f, 0.05f};
+    glm::vec3 dayAmbient = {0.2f, 0.2f, 0.25f};
 
-    glm::vec3 currentLightColor = { 0.0f, 0.0f, 0.0f };
+    glm::vec3 currentLightColor = {0.0f, 0.0f, 0.0f};
     glm::vec3 currentAmbient = nightAmbient;
 
     // 4. Interpolate based on time ranges
-    if (timeOfDay >= 0.0f && timeOfDay < 0.2f) { // Night to Dawn
+    if (timeOfDay >= 0.0f && timeOfDay < 0.2f)
+    {
+        // Night to Dawn
         float t = timeOfDay / 0.2f;
         currentLightColor = glm::mix(nightColor, sunriseColor, t);
         currentAmbient = glm::mix(nightAmbient, dayAmbient, t);
     }
-    else if (timeOfDay >= 0.2f && timeOfDay < 0.5f) { // Dawn to Noon
+    else if (timeOfDay >= 0.2f && timeOfDay < 0.5f)
+    {
+        // Dawn to Noon
         float t = (timeOfDay - 0.2f) / 0.3f;
         currentLightColor = glm::mix(sunriseColor, dayColor, t);
         currentAmbient = dayAmbient;
     }
-    else if (timeOfDay >= 0.5f && timeOfDay < 0.75f) { // Noon to Dusk
+    else if (timeOfDay >= 0.5f && timeOfDay < 0.75f)
+    {
+        // Noon to Dusk
         float t = (timeOfDay - 0.5f) / 0.25f;
         currentLightColor = glm::mix(dayColor, sunsetColor, t);
         currentAmbient = dayAmbient;
     }
-    else { // Dusk to Night
+    else
+    {
+        // Dusk to Night
         float t = (timeOfDay - 0.75f) / 0.25f;
         currentLightColor = glm::mix(sunsetColor, nightColor, t);
         currentAmbient = glm::mix(dayAmbient, nightAmbient, t);
     }
 
     // Fade out light intensity completely when sun goes below horizon (under the ground)
-    if (sunPosition.y < 0.0f) {
-        currentLightColor = { 0.0f, 0.0f, 0.0f }; // Only ambient light left at night
+    if (sunPosition.y < 0.0f)
+    {
+        currentLightColor = {0.0f, 0.0f, 0.0f}; // Only ambient light left at night
     }
 
     // 5. Send data to the shader programs
     mLightingStruct.ambientColor = currentAmbient;
     mLightingStruct.lightDirection = -sunPosition;
     mLightingStruct.lightColor = currentLightColor;
+}
+
+void App::DrawHud()
+{
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
+
+    // Create a simple window
+    ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f));
+    ImGui::Begin("Debug menu");
+    ImGui::Text("Current time of day: %f", timeOfDay);
+    ImGui::Text("Camera position (x,y,z): %f %f %f", mCamera.m_position.x, mCamera.m_position.y, mCamera.m_position.z);
+    ImGui::End();
+
+    // Rendering
+    ImGui::Render();
+
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

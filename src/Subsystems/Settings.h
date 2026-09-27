@@ -14,6 +14,7 @@ struct settings
     bool fullScreen;
     int screenWidth;
     int screenHeight;
+    std::string language;
 };
 
 /// @brief Input bindings, either keyboard or gamepad
@@ -68,6 +69,19 @@ public:
     void setFullScreen(bool enabled);
     void setResolution(int width, int height);
     glm::ivec2 getResolution() const;
+
+    // Language
+    /**
+     * BCP 47 standard country codes
+     * @see https://en.wikipedia.org/wiki/IETF_language_tag
+     * @return Current language code
+     */
+    std::string getLanguage() const;
+    /**
+     * BCP 47 standard country codes
+     * @param language
+     */
+    void setLanguage(const std::string& language);
 
     // Input
     /// @see https://wiki.libsdl.org/SDL3/SDL_Scancode

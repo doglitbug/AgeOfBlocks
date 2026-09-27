@@ -2,10 +2,14 @@
 
 #include <SDL3/SDL.h>
 #include <glad/glad.h>
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_sdl3.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
 
 #include "Settings.h"
 #include "InputSystem.h"
 #include "Camera.h"
+#include "Language.h"
 #include "ObjectMesh.h"
 #include "../World/CharacterShader.h"
 #include "Terrain/map.h"
@@ -33,16 +37,17 @@ public:
 
     void toggleMouseLock();
     void setResolution(int width, int height, bool resize = false);
-    [[nodiscard]] bool running() const { return m_bRunning; }
+    bool running() const { return m_bRunning; }
     void quit() { m_bRunning = false; }
 
-    [[nodiscard]] Settings *getSettings() const { return m_pSettings; }
-    [[nodiscard]] InputSystem *getInput() const { return m_pInput; }
+    Settings *getSettings() const { return m_pSettings; }
+    InputSystem *getInput() const { return m_pInput; }
+    Language *getLanguage() const { return m_pLanguage; }
 
     int m_meshNumber = 0;
 private:
     App() = default;
-    ~App();
+    ~App() override;
 
     void CompileShaders();
     void RenderScene();
@@ -50,6 +55,7 @@ private:
     SDL_Window *m_pWindow;
     Settings *m_pSettings;
     InputSystem *m_pInput;
+    Language *m_pLanguage;
     Camera mCamera{};
 
     SDL_GLContext glContext;
@@ -90,6 +96,8 @@ private:
     } mLightingStruct;
 
     const float DAY_DURATION_SECONDS = 10.0f;
-    float timeOfDay = 0.5f;
+    float timeOfDay = 0.45f;
     void UpdateDayNightCycle(float deltaTime);
+
+    void DrawHud();
 };

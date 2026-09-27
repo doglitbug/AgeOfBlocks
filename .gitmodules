@@ -1,3 +1,6 @@
 [submodule "assets"]
 	path = assets
 	url = git@github.com:doglitbug/AgeOfBlocks_assets.git
+[submodule "include/imgui"]
+	path = include/imgui
+	url = http://github.com/ocornut/imgui

@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <glm/glm.hpp>
 
-using MyType = std::variant<int, float, bool, glm::ivec2>;
+using MyType = std::variant<int, float, bool, glm::ivec2, std::string>;
 class IObserver
 {
 public:
