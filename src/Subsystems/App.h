@@ -8,13 +8,8 @@
 
 #include "Settings.h"
 #include "InputSystem.h"
-#include "Camera.h"
 #include "Language.h"
-#include "ObjectMesh.h"
-#include "../World/CharacterShader.h"
 #include "States/StateMachine.h"
-#include "Terrain/map.h"
-#include "Terrain/shaders/TerrainShader.h"
 
 class App : public IObserver
 {
@@ -46,62 +41,17 @@ public:
     Language *getLanguage() const { return m_pLanguage; }
     StateMachine* getStateMachine() const { return m_pStateMachine; }
 
-    int m_meshNumber = 0;
 private:
     App() = default;
     ~App() override;
 
-    void CompileShaders();
-    void RenderScene();
-
     SDL_Window *m_pWindow;
+    SDL_GLContext glContext;
     Settings *m_pSettings;
     InputSystem *m_pInput;
     Language *m_pLanguage;
     StateMachine* m_pStateMachine;
 
-    Camera mCamera{};
-
-    SDL_GLContext glContext;
-
-    CharacterShader m_3dShaderProgram;
-    TerrainShader m_terrainShaderProgram;
-
-    GLint gModelLocation;
-
-    GLint gSamplerLocation;
-
-    Texture *pTexture;
-
     bool m_bRunning;
     bool m_mouseLocked;
-
-    ObjectMesh m_playerObject;
-    ObjectMesh m_NPC;
-
-    map *m_map;
-
-    GLuint ubos[2];
-
-    struct viewStruct
-    {
-        glm::mat4 view;
-        glm::mat4 projection;
-    } mViewStruct;
-
-    struct lightingStruct
-    {
-        glm::vec3 ambientColor;
-        float _pad0;
-        glm::vec3 lightDirection;
-        float _pad1;
-        glm::vec3 lightColor;
-        float _pad2;
-    } mLightingStruct;
-
-    const float DAY_DURATION_SECONDS = 10.0f;
-    float timeOfDay = 0.45f;
-    void UpdateDayNightCycle(float deltaTime);
-
-    void DrawHud();
 };

@@ -32,6 +32,15 @@ public:
     /// @return boolean
     bool getAction(actions action) const;
 
+    /**
+     * See if a particular key has been pressed.
+     * Ideally this will only ever be used publicly for testing, it needs to be moved back to private and use getAction
+     * instead!
+     * @param key SDL_SCANCODE to check
+     * @return boolean if key is down this frame
+     */
+    [[nodiscard]] bool getKeyDown(int key) const;
+
     // Joystick Handling
     void initializeGamepads();
     bool gamepadInUse() const { return m_bGamepad; }
@@ -58,7 +67,6 @@ private:
     // Keyboard
     const bool *m_keyStates;
     void onKeyChange();
-    [[nodiscard]] bool getKeyDown(int key) const;
 
     // Joysticks
     /// @brief are we using a GamePad?

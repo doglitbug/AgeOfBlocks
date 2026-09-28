@@ -6,16 +6,6 @@
 
 #define LABEL(x) App::get()->getLanguage()->get(x).c_str()
 
-void MainMenuState::onEnter()
-{
-
-}
-
-void MainMenuState::update(float deltaTime)
-{
-
-}
-
 void MainMenuState::render()
 {
     // Start the Dear ImGui frame
@@ -31,28 +21,26 @@ void MainMenuState::render()
     ImGui::Begin("Main Menu", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground);
 
     // Title / Logo
-    ImGui::SetCursorPosX((windowSize.x - ImGui::CalcTextSize(LABEL("MENU_NAME")).x) * 0.5f);
-    ImGui::Text(LABEL("MENU_NAME"));
+    auto title= LABEL("MENU_NAME");
+    ImGui::SetCursorPosX((windowSize.x - ImGui::CalcTextSize(title).x) * 0.5f);
+    ImGui::Text("%s",title);
     ImGui::Spacing();
     ImGui::Spacing();
 
     // Menu Buttons (Full width)
     ImVec2 buttonSize = ImVec2(-1, 40);
-    if (ImGui::Button(LABEL("MENU_SINGLEPLAYER"), buttonSize)) { /* Start game */ }
+    if (ImGui::Button(LABEL("MENU_SINGLEPLAYER"), buttonSize))
+    {
+        App::get()->getStateMachine()->changeState("PLAY");
+    }
     if (ImGui::Button(LABEL("MENU_MULTIPLAYER"), buttonSize)) { /* Start game */ }
     if (ImGui::Button(LABEL("MENU_SETTINGS"), buttonSize)) { /* Open settings */ }
-    if (ImGui::Button(LABEL("MENU_CREDITS"), buttonSize)) { /* Open settings */ }
+    if (ImGui::Button(LABEL("MENU_CREDITS"), buttonSize)) { /* Open credits */ }
     if (ImGui::Button(LABEL("MENU_QUIT"), buttonSize)) {App::get()->quit();}
 
     ImGui::End();
 
-    // Rendering
     ImGui::Render();
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void MainMenuState::onExit()
-{
-
 }

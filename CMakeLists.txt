@@ -21,6 +21,8 @@ set(IMGUI_SRCS
         # Include the specific SDL3 and OpenGL3 backend implementations
         ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
         ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+        src/States/PlayState.cpp
+        src/States/PlayState.h
 )
 
 # Define Executable

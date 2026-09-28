@@ -55,8 +55,7 @@ public:
                 errorStr = "UNKNOWN_ERROR";
                 break;
             }
-            //TODO Change to SDL_Log
-            std::cerr << "OpenGL Error at " << location << ": " << errorStr << " (0x" << std::hex << err << ")" << std::endl;
+            SDL_Log("OpenGL Error at %s : %s (0x%04X)", location.c_str(), errorStr.c_str(), static_cast<unsigned int>(err));
         }
     }
 };

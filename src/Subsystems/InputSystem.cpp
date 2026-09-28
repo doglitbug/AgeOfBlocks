@@ -209,14 +209,7 @@ void InputSystem::onKeyChange()
 {
     m_keyStates = SDL_GetKeyboardState(nullptr);
     //TODO Remove this test code
-    if (getKeyDown(SDL_SCANCODE_X) && App::get()->m_meshNumber < 21)
-    {
-        App::get()->m_meshNumber++;
-    }
-    if (getKeyDown(SDL_SCANCODE_Z) && App::get()->m_meshNumber > 0)
-    {
-        App::get()->m_meshNumber--;
-    }
+
     if (getKeyDown(SDL_SCANCODE_Q))
     {
         App::get()->quit();
