@@ -7,6 +7,8 @@
 
 #include "App.h"
 
+#include "States/MainMenuState.h"
+
 void App::onNotify(const std::string& message, const MyType newValue)
 {
     if (message == "RESOLUTION")
@@ -125,17 +127,26 @@ void App::init()
     ImGui_ImplSDL3_InitForOpenGL(m_pWindow, glContext);
     ImGui_ImplOpenGL3_Init("#version 130");
 
+    //Create state machine and populate
+    m_pStateMachine = new StateMachine();
+
+    m_pStateMachine->registerState("MAINMENU", new MainMenuState());
+
+
     m_bRunning = true;
 }
 
 void App::handleEvents()
 {
     SDL_Event event;
+    //TODO Check this is needed
     m_pInput->resetMouseMovement();
 
     while (SDL_PollEvent(&event))
     {
+        ImGui_ImplSDL3_ProcessEvent(&event);
         switch (event.type)
+
         {
         case SDL_EVENT_QUIT:
             quit();
@@ -174,7 +185,8 @@ void App::render()
 {
     glClearColor(0.15f, 0.15f, 0.18f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    RenderScene();
+    //RenderScene();
+    m_pStateMachine->render();
     SDL_GL_SwapWindow(m_pWindow);
 }
 

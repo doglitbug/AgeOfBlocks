@@ -25,35 +25,38 @@ set(IMGUI_SRCS
 
 # Define Executable
 file(GLOB_RECURSE SOURCES
-    "src/*.cpp"
-    "src/*.h"
-    "src/Subsystems*.cpp"
-    "src/Subsystems*.h"
-    "src/World*.cpp"
-    "src/World*.h"
-    "src/GUI*.cpp"
-    "src/GUI*.h"
+        "src/*.cpp"
+        "src/*.h"
+        "src/States/*.cpp"
+        "src/States/*.h"
+        "src/Subsystems*.cpp"
+        "src/Subsystems*.h"
+        "src/World*.cpp"
+        "src/World*.h"
+        "src/GUI*.cpp"
+        "src/GUI*.h"
 )
-add_executable(${PROJECT_NAME} 
-    ${SOURCES}
-    "include/glad/glad.c"
-    ${IMGUI_SRCS}
+add_executable(${PROJECT_NAME}
+        ${SOURCES}
+        "include/glad/glad.c"
+        ${IMGUI_SRCS}
 )
 
 # Include Directories
 target_include_directories(${PROJECT_NAME} PRIVATE
-    "include/"
-    ${IMGUI_DIR}
-    ${IMGUI_DIR}/backends
-    "src"
-    "src/Subsystems/"
-    "src/World/"
-    "src/GUI/"
+        "include/"
+        ${IMGUI_DIR}
+        ${IMGUI_DIR}/backends
+        "src"
+        "src/Subsystems/"
+        "src/World/"
+        "src/GUI/"
+        "src/States"
 )
 
 # Link Libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    SDL3::SDL3
-    OpenGL::GL
-    assimp::assimp
+        SDL3::SDL3
+        OpenGL::GL
+        assimp::assimp
 )

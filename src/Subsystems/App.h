@@ -12,6 +12,7 @@
 #include "Language.h"
 #include "ObjectMesh.h"
 #include "../World/CharacterShader.h"
+#include "States/StateMachine.h"
 #include "Terrain/map.h"
 #include "Terrain/shaders/TerrainShader.h"
 
@@ -43,6 +44,7 @@ public:
     Settings *getSettings() const { return m_pSettings; }
     InputSystem *getInput() const { return m_pInput; }
     Language *getLanguage() const { return m_pLanguage; }
+    StateMachine* getStateMachine() const { return m_pStateMachine; }
 
     int m_meshNumber = 0;
 private:
@@ -56,6 +58,8 @@ private:
     Settings *m_pSettings;
     InputSystem *m_pInput;
     Language *m_pLanguage;
+    StateMachine* m_pStateMachine;
+
     Camera mCamera{};
 
     SDL_GLContext glContext;

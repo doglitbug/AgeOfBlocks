@@ -30,6 +30,11 @@ void Language::loadLanguage()
     m_stringTable.clear();
     //TODO Mock data is here, go load from file!
     m_stringTable["LANGUAGE"] = "English";
+
+    m_stringTable["MENU_NAME"] = "Age of Blocks";
+    m_stringTable["MENU_SINGLEPLAYER"] = "New game";
+    m_stringTable["MENU_MULTIPLAYER"] = "Multiplayer";
     m_stringTable["MENU_SETTINGS"] = "Settings";
+    m_stringTable["MENU_CREDITS"] = "Credits";
     m_stringTable["MENU_QUIT"] = "Quit";
 }
