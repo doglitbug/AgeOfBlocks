@@ -1,5 +1,6 @@
 #include "PlayState.h"
 
+#include <chrono>
 #include <SDL3/SDL_log.h>
 
 #include "App.h"
@@ -13,7 +14,6 @@ void PlayState::onEnter()
     // TODO Store fov, near and far as variables?
     const auto resolution = App::get()->getSettings()->getResolution();
     mCamera->setPerspective(45.0f, resolution.x, resolution.y, 0.1f, 1000.0f);
-
 
     glGenBuffers(2, ubos);
 
@@ -43,14 +43,24 @@ void PlayState::onEnter()
     // Texture Sampler
     gSamplerLocation = m_3dShaderProgram.getUniformLocation("gSampler");
 
+    auto start = std::chrono::steady_clock::now();
     m_map = new map(64);
     m_map->generateMap();
     m_map->populateBuffers();
+    auto end = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    // 5. Output the result using .count()
+    std::cout << "Time taken by code section: "
+              << duration.count() << " microseconds" << std::endl;
+
+
+    App::get()->getSettings()->addObserver(this);
+    App::get()->setMouseLock(true);
 }
 
 void PlayState::update(float deltaTime)
 {
-
     m_playerObject.m_rotation.y += deltaTime * 50;
     //TODO Wrap around, possibly add to a object.update(deltaTime)
     m_playerObject.m_animationTime += deltaTime;
@@ -80,7 +90,16 @@ void PlayState::render()
 
 void PlayState::onExit()
 {
+    App::get()->getSettings()->removeObserver(this);
     delete mCamera;
+}
+
+void PlayState::onNotify(const std::string& message, const MyType newValue)
+{
+    if (message == "RESOLUTION"){
+        auto resolution = std::get<glm::ivec2>(newValue);
+        mCamera->setPerspective(45.0f, resolution.x, resolution.y, 0.1f, 1000.0f);
+    }
 }
 
 void PlayState::drawHUD()

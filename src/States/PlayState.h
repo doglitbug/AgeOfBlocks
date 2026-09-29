@@ -1,14 +1,14 @@
 #pragma once
 #include "BaseState.h"
 #include "Camera.h"
-#include "Camera.h"
 #include "Texture.h"
 #include "../World/CharacterShader.h"
 #include "Terrain/map.h"
 #include "Terrain/shaders/TerrainShader.h"
 #include "ObjectMesh.h"
+#include "Observers.h"
 
-class PlayState: public BaseState
+class PlayState: public BaseState, IObserver
 {
 public:
     void onEnter() override;
@@ -16,14 +16,16 @@ public:
     void render() override;
     void onExit() override;
 
+    void onNotify(const std::string &message, MyType newValue) override;
+
     //TODO Private this
     int m_meshNumber = 0;
 
 private:
     Camera* mCamera = nullptr;
+    void toggleMouseLock();
     void drawHUD();
     void UpdateDayNightCycle(float deltaTime);
-
 
     CharacterShader m_3dShaderProgram;
     TerrainShader m_terrainShaderProgram;

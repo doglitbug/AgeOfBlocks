@@ -15,7 +15,7 @@ void App::onNotify(const std::string& message, const MyType newValue)
     if (message == "RESOLUTION")
     {
         const glm::ivec2 screenResolution = std::get<glm::ivec2>(newValue);
-        setResolution(screenResolution.x, screenResolution.y, true);
+        glViewport(0, 0, screenResolution.x, screenResolution.y);
     }
 }
 
@@ -63,13 +63,10 @@ void App::init()
         exit(1);
     }
 
-    setResolution(screenResolution.x, screenResolution.y);
-
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CW); // This doesn't seem to affect the models, check for walls/terrain?
     glCullFace(GL_BACK);
-
 
 
     // Create input subsystem
@@ -115,18 +112,12 @@ void App::handleEvents()
             quit();
             return;
         case SDL_EVENT_WINDOW_RESIZED:
-            setResolution(event.window.data1, event.window.data2);
-            //TODO Tell the settings so it can be saved?
+            m_pSettings->setResolution(event.window.data1, event.window.data2);
             return;
         default:
             m_pInput->update(event);
             break;
         }
-    }
-
-    if (m_pInput->getAction(actions::MENU))
-    {
-        toggleMouseLock();
     }
 }
 
@@ -143,20 +134,10 @@ void App::render()
     SDL_GL_SwapWindow(m_pWindow);
 }
 
-void App::toggleMouseLock()
+void App::setMouseLock(const bool newState)
 {
-    m_mouseLocked = !m_mouseLocked;
-    SDL_SetWindowRelativeMouseMode(m_pWindow, m_mouseLocked);
-}
-
-void App::setResolution(const int width, const int height, const bool resize)
-{
-    // Change window size?
-    if (resize)
-    {
-        SDL_Log("Window resize");
-    }
-    glViewport(0, 0, width, height);
+    m_mouseLocked = newState;
+    SDL_SetWindowRelativeMouseMode(m_pWindow, newState);
 }
 
 App::~App()

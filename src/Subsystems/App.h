@@ -31,8 +31,8 @@ public:
     void update(float deltaTime);
     void render();
 
-    void toggleMouseLock();
-    void setResolution(int width, int height, bool resize = false);
+    void setMouseLock(bool newState);
+    bool getMouseLock(){ return m_mouseLocked; };
     bool running() const { return m_bRunning; }
     void quit() { m_bRunning = false; }
 
