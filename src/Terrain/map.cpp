@@ -185,7 +185,7 @@ void map::loadTextures()
 {
     const auto terrainPath = "assets/terrain/";
     const std::vector<std::string> filenames = {
-        "RockWall_Texture_01.png",
+        "Rock_Texture_01.png",
         "Grass_Clovers_Texture_01.png",
         "Sand_Texture_01.png"
     };

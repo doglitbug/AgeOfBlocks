@@ -57,6 +57,12 @@ void PlayState::onEnter()
 
     App::get()->getSettings()->addObserver(this);
     App::get()->setMouseLock(true);
+
+    mLightingStruct = {
+        .ambientColor   = glm::vec3(0.18f, 0.24f, 0.35f),
+        .lightDirection = glm::normalize(glm::vec3(-0.3f, -1.0f, -0.4f)),
+        .lightColor     = glm::vec3(1.0f, 0.98f, 0.85f)
+    };
 }
 
 void PlayState::update(float deltaTime)
@@ -69,8 +75,6 @@ void PlayState::update(float deltaTime)
     mCamera->move(App::get()->getInput()->getMovement() * deltaTime * 10.0f);
     // TODO Mouse movement would need to rotate the player object too.
     mCamera->mouseLook(App::get()->getInput()->getMouseMovement() * deltaTime);
-
-    UpdateDayNightCycle(deltaTime);
 
     if (App::get()->getInput()->getKeyDown(SDL_SCANCODE_X) && m_meshNumber < 21)
     {
@@ -121,71 +125,6 @@ void PlayState::drawHUD()
     ImGui::Render();
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void PlayState::UpdateDayNightCycle(float deltaTime)
-{
-    // 1. Advance time and wrap around 1.0 (24 hours)
-    //TODO Advance
-    //timeOfDay += deltaTime / DAY_DURATION_SECONDS;
-    if (timeOfDay > 1.0f) timeOfDay -= 1.0f;
-
-    // 2. Calculate Sun Direction (Orbiting around the Z or X axis)
-    float angle = (timeOfDay * 2.0f * 3.14159265f) - 1.57079632f;
-    glm::vec3 sunPosition = {std::cos(angle) * 1.0f, std::sin(angle) * 1.0f, 0.0f}; // Sun rises/sets along X/Y plane
-
-    // 3. Define Colors for Times of Day
-    glm::vec3 nightColor = {0.05f, 0.05f, 0.1f};
-    glm::vec3 sunriseColor = {0.9f, 0.4f, 0.2f};
-    glm::vec3 dayColor = {1.0f, 1.0f, 0.9f};
-    glm::vec3 sunsetColor = {0.8f, 0.3f, 0.3f};
-
-    glm::vec3 nightAmbient = {0.02f, 0.02f, 0.05f};
-    glm::vec3 dayAmbient = {0.2f, 0.2f, 0.25f};
-
-    glm::vec3 currentLightColor = {0.0f, 0.0f, 0.0f};
-    glm::vec3 currentAmbient = nightAmbient;
-
-    // 4. Interpolate based on time ranges
-    if (timeOfDay >= 0.0f && timeOfDay < 0.2f)
-    {
-        // Night to Dawn
-        float t = timeOfDay / 0.2f;
-        currentLightColor = glm::mix(nightColor, sunriseColor, t);
-        currentAmbient = glm::mix(nightAmbient, dayAmbient, t);
-    }
-    else if (timeOfDay >= 0.2f && timeOfDay < 0.5f)
-    {
-        // Dawn to Noon
-        float t = (timeOfDay - 0.2f) / 0.3f;
-        currentLightColor = glm::mix(sunriseColor, dayColor, t);
-        currentAmbient = dayAmbient;
-    }
-    else if (timeOfDay >= 0.5f && timeOfDay < 0.75f)
-    {
-        // Noon to Dusk
-        float t = (timeOfDay - 0.5f) / 0.25f;
-        currentLightColor = glm::mix(dayColor, sunsetColor, t);
-        currentAmbient = dayAmbient;
-    }
-    else
-    {
-        // Dusk to Night
-        float t = (timeOfDay - 0.75f) / 0.25f;
-        currentLightColor = glm::mix(sunsetColor, nightColor, t);
-        currentAmbient = glm::mix(dayAmbient, nightAmbient, t);
-    }
-
-    // Fade out light intensity completely when sun goes below horizon (under the ground)
-    if (sunPosition.y < 0.0f)
-    {
-        currentLightColor = {0.0f, 0.0f, 0.0f}; // Only ambient light left at night
-    }
-
-    // 5. Send data to the shader programs
-    mLightingStruct.ambientColor = currentAmbient;
-    mLightingStruct.lightDirection = -sunPosition;
-    mLightingStruct.lightColor = currentLightColor;
 }
 
 void PlayState::CompileShaders()

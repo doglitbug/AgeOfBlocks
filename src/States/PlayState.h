@@ -25,7 +25,6 @@ private:
     Camera* mCamera = nullptr;
     void toggleMouseLock();
     void drawHUD();
-    void UpdateDayNightCycle(float deltaTime);
 
     CharacterShader m_3dShaderProgram;
     TerrainShader m_terrainShaderProgram;
