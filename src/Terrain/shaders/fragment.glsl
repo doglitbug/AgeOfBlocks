@@ -1,8 +1,7 @@
 #version 330
 
 in vec2 TextureCoord;
-in vec3 Normal;
-flat in int TerrainIndex;
+in vec2 GridCoords;
 
 layout (std140) uniform lightingUniform {
     vec3 ambientColor;
@@ -13,24 +12,23 @@ layout (std140) uniform lightingUniform {
     float _pad2;
 };
 
-out vec4 FragColor;
-
 uniform sampler2DArray textureArray;
+uniform sampler2D terrainMap;
+
+out vec4 FragColor;
 
 void main()
 {
-    vec3 norm = normalize(Normal);
-    vec3 negLightDirection = normalize(-lightDirection);
+    // 1. Read the raw 32-bit float value directly from your map.
+    // Because your format is GL_R32F, this is already the exact layer index (e.g. 0.0, 1.0, 2.0)
+    float terrainID = texture(terrainMap, GridCoords).r;
 
-    vec4 texColor = texture(textureArray, vec3(TextureCoord, float(TerrainIndex)));
+    // 2. Pass it directly to the texture array.
+    // We add a tiny rounding protection (floor + 0.5) just in case floating-point precision
+    // makes a 1.0 read as 0.99999 from the texture cache.
+    float safeLayerIndex = floor(terrainID + 0.5);
 
-    vec3 ambient = ambientColor * texColor.rgb;
+    vec4 texColor = texture(textureArray, vec3(TextureCoord, safeLayerIndex));
 
-    float diff = max(dot(norm, negLightDirection), 0.0);
-    vec3 diffuse = diff * lightColor * texColor.rgb;
-
-    vec3 result = ambient + diffuse;
-
-    // Preserve the original texture alpha channel
-    FragColor = vec4(result, texColor.a);
+    FragColor = texColor;
 }

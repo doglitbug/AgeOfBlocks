@@ -2,9 +2,8 @@
 
 #include <vector>
 
-#include "ObjectBase.h"
 #include "TextureArray.h"
-#include "glm/vec2.hpp"
+#include "shaders/TerrainShader.h"
 
 // Make sure this is a power of 2, for SIMD optimization later on?
 #define CHUNK_SIZE 32
@@ -21,74 +20,43 @@ enum terrainType
 {
     MapEdge = 0,
     Grass,
-    Sand
+    Rock,
+    Sand,
 };
 
 struct cell
 {
     terrainType terrain;
-    int height;
     bool walkable;
     bool isBuildable;
 };
 
-struct vertex
-{
-    glm::vec3 position{};
-    glm::vec2 textureCoordinate{};
-    glm::vec3 normal{};
-    int terrainType{};
+static constexpr cell OutOfBoundsCell{MapEdge, false, false};
 
-    vertex(const glm::vec3 position, const glm::vec2 textureCoordinate, const glm::vec3 normal, const int terrainType)
-    {
-        this->position = position;
-        this->textureCoordinate = textureCoordinate;
-        this->normal = normal;
-        this->terrainType = terrainType;
-    }
-};
-
-static constexpr cell OutOfBoundsCell{MapEdge, 10, false, false};
-
-class map : public ObjectBase
+class map
 {
 public:
     //TODO Ensure rows/columns are a multiple of CHUNK_SIZE?
-    explicit map(const int size = CHUNK_SIZE) : size(size)
-    {
-        loadTextures();
-    }
+    explicit map(int size = CHUNK_SIZE);
 
-    void populateBuffers() override;
-    void render() override;
+    void render();
 
     void generateMap();
 
-    [[nodiscard]] int getSize() const { return size; }
-
-    // Mutable reference
-    cell& operator()(const int row, const int col)
-    {
-        return grid[row * size + col];
-    }
-
-    // Read only
-    const cell& operator()(const int row, const int col) const
-    {
-        return grid[row * size + col];
-    }
+    [[nodiscard]] int getSize() const { return m_size; }
 
 private:
-    void generateWallVertices();
-    void generateGroundVertices();
-    //TODO Move to parent?
     void loadTextures();
-    int size;
-    std::vector<cell> grid;
+    void CreateHeightMapTexture();
+    void CreateTerrainMapTexture();
+    int m_size;
+    std::vector<float> heightMap;
+    std::vector<float> terrainMap;
+
     TextureArray *m_textureArray;
-    // Global because they will likely change due to height during game play?
-    std::vector<vertex> wallVertices;
-    std::vector<vertex> groundVertices;
+    //TODO Should this just be a pointer?
+    TerrainShader m_terrainShaderProgram;
+    GLuint m_VAO;
+    GLuint heightTextureID;
+    GLuint terrainTextureID;
 };
-
-

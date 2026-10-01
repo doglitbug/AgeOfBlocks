@@ -27,7 +27,6 @@ private:
     void drawHUD();
 
     CharacterShader m_3dShaderProgram;
-    TerrainShader m_terrainShaderProgram;
 
     GLint gModelLocation;
     GLint gSamplerLocation;

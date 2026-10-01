@@ -65,7 +65,7 @@ void App::init()
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glFrontFace(GL_CW); // This doesn't seem to affect the models, check for walls/terrain?
+    glFrontFace(GL_CW);
     glCullFace(GL_BACK);
 
 

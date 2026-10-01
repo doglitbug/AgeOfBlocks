@@ -45,8 +45,6 @@ void PlayState::onEnter()
 
     auto start = std::chrono::steady_clock::now();
     m_map = new map(64);
-    m_map->generateMap();
-    m_map->populateBuffers();
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
@@ -130,7 +128,6 @@ void PlayState::drawHUD()
 void PlayState::CompileShaders()
 {
     m_3dShaderProgram.init();
-    m_terrainShaderProgram.init();
 }
 
 void PlayState::RenderScene()
@@ -170,6 +167,5 @@ void PlayState::RenderScene()
 
 
     // Draw the world
-    m_terrainShaderProgram.enable();
     m_map->render();
 }

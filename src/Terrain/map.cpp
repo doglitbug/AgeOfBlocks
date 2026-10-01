@@ -1,192 +1,24 @@
 #include "map.h"
 
-#include <SDL3/SDL_log.h>
+#include <cmath>
 
-void map::populateBuffers()
+map::map(const int size)
 {
+    m_size = size;
+    m_textureArray = {};
+    loadTextures();
+    m_terrainShaderProgram.init();
     glGenVertexArrays(1, &m_VAO);
-    glBindVertexArray(m_VAO);
-
-    generateWallVertices();
-    generateGroundVertices();
-
-    std::vector<vertex> totalVertices;
-    totalVertices.reserve(wallVertices.size() + groundVertices.size());
-
-    // Append wall data
-    totalVertices.insert(totalVertices.end(), wallVertices.begin(), wallVertices.end());
-    // Append ground data
-    totalVertices.insert(totalVertices.end(), groundVertices.begin(), groundVertices.end());
-
-
-    glGenBuffers(1, &m_VBO);
-    // Walls
-    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferData(GL_ARRAY_BUFFER, totalVertices.size() * sizeof(vertex), totalVertices.data(), GL_STATIC_DRAW);
-
-
-    // position
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), nullptr);
-
-    // tex coords
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex),
-                          reinterpret_cast<const void*>(offsetof(vertex, textureCoordinate)));
-
-    // normals
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, sizeof(vertex),
-                          reinterpret_cast<const void*>(offsetof(vertex, normal)));
-
-    // terrain type
-    glEnableVertexAttribArray(3);
-    glVertexAttribIPointer(3, 1, GL_INT, sizeof(vertex),
-                           reinterpret_cast<const void*>(offsetof(vertex, terrainType)));
-
-
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void map::generateWallVertices()
-{
-    wallVertices.reserve(size * 4 * 6);
-
-    // Top and bottom of walls
-    constexpr float y_bottom = 0.0f;
-    constexpr float y_top = y_bottom + GRID_SIZE;
-
-    constexpr int terrainLayer = MapEdge;
-
-    // North wall
-    for (int x = 0; x < size; ++x)
-    {
-        const float z = size * GRID_SIZE;
-        auto normal = glm::vec3(0.0f, 0.0f, -1.0f);
-        // Pre-calculate physical geometric bounds for this specific quad step
-        float x_left = x * GRID_SIZE;
-        float x_right = (x + 1) * GRID_SIZE;
-
-        // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
-        wallVertices.emplace_back(glm::vec3(x_left, y_bottom, z), t00, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x_left, y_top, z), t01, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x_right, y_top, z), t11, normal, terrainLayer);
-        // Standard Top-Right mapping
-
-        // Triangle 2: RHS (Bottom-Left -> Top-Right -> Bottom-Right)
-        wallVertices.emplace_back(glm::vec3(x_left, y_bottom, z), t00, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x_right, y_top, z), t11, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x_right, y_bottom, z), t10, normal, terrainLayer);
-        // Corrected Bottom-Right mapping
-    }
-
-    // East wall
-    for (int z = size; z > 0; --z)
-    {
-        const float x = size * GRID_SIZE;
-        auto normal = glm::vec3(-1.0f, 0.0f, 0.0f);
-        // Pre-calculate physical geometric bounds for this specific quad step
-        float z_left = z * GRID_SIZE;
-        float z_right = (z - 1) * GRID_SIZE;
-
-        // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
-        wallVertices.emplace_back(glm::vec3(x, y_bottom, z_left), t00, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x, y_top, z_left), t01, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x, y_top, z_right), t11, normal, terrainLayer);
-        // Standard Top-Right mapping
-
-        // Triangle 2: RHS (Bottom-Left -> Top-Right -> Bottom-Right)
-        wallVertices.emplace_back(glm::vec3(x, y_bottom, z_left), t00, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x, y_top, z_right), t11, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x, y_bottom, z_right), t10, normal, terrainLayer);
-        // Corrected Bottom-Right mapping
-    }
-
-    // South wall
-    for (int x = size; x > 0; --x)
-    {
-        const float z = 0.0f;
-        auto normal = glm::vec3(0.0f, 0.0f, 1.0f);
-        // Pre-calculate physical geometric bounds for this specific quad step
-        float x_left = x * GRID_SIZE;
-        float x_right = (x - 1) * GRID_SIZE;
-
-        // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
-        wallVertices.emplace_back(glm::vec3(x_left, y_bottom, z), t00, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x_left, y_top, z), t01, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x_right, y_top, z), t11, normal, terrainLayer);
-        // Standard Top-Right mapping
-
-        // Triangle 2: RHS (Bottom-Left -> Top-Right -> Bottom-Right)
-        wallVertices.emplace_back(glm::vec3(x_left, y_bottom, z), t00, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x_right, y_top, z), t11, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x_right, y_bottom, z), t10, normal, terrainLayer);
-        // Corrected Bottom-Right mapping
-    }
-
-    //West wall
-    for (int z = 0; z < size; ++z)
-    {
-        const float x = 0.0f;
-        auto normal = glm::vec3(1.0f, 0.0f, 0.0f);
-        // Pre-calculate physical geometric bounds for this specific quad step
-        float z_left = z * GRID_SIZE;
-        float z_right = (z + 1) * GRID_SIZE;
-
-        // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
-        wallVertices.emplace_back(glm::vec3(x, y_bottom, z_left), t00, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x, y_top, z_left), t01, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x, y_top, z_right), t11, normal, terrainLayer);
-        // Standard Top-Right mapping
-
-        // Triangle 2: RHS (Bottom-Left -> Top-Right -> Bottom-Right)
-        wallVertices.emplace_back(glm::vec3(x, y_bottom, z_left), t00, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x, y_top, z_right), t11, normal, terrainLayer);
-        wallVertices.emplace_back(glm::vec3(x, y_bottom, z_right), t10, normal, terrainLayer);
-        // Corrected Bottom-Right mapping
-    }
-}
-
-void map::generateGroundVertices()
-{
-    groundVertices.reserve(size * size * 6);
-
-    auto normal = glm::vec3(0.0f, 1.0f, 0.0f);
-    for (int z = 0; z < size; ++z)
-    {
-        // Pre-calculate physical geometric bounds for this specific quad step
-        float z_top = (z + 1) * GRID_SIZE;
-        float z_bottom = z * GRID_SIZE;
-        for (int x = 0; x < size; ++x)
-        {
-            // Pre-calculate physical geometric bounds for this specific quad step
-            float x_left = x * GRID_SIZE;
-            float x_right = (x + 1) * GRID_SIZE;
-
-            int terrainLayer = (*this)(z, x).terrain;
-
-            // Triangle 1: LHS (Bottom-Left -> Top-Left -> Top-Right)
-            groundVertices.emplace_back(glm::vec3(x_left, 0, z_bottom), t00, normal, terrainLayer);
-            groundVertices.emplace_back(glm::vec3(x_left, 0, z_top), t01, normal, terrainLayer);
-            groundVertices.emplace_back(glm::vec3(x_right, 0, z_top), t11, normal, terrainLayer);
-            // Standard Top-Right mapping
-
-            // Triangle 2: RHS (Bottom-Left -> Top-Right -> Bottom-Right)
-            groundVertices.emplace_back(glm::vec3(x_left, 0, z_bottom), t00, normal, terrainLayer);
-            groundVertices.emplace_back(glm::vec3(x_right, 0, z_top), t11, normal, terrainLayer);
-            groundVertices.emplace_back(glm::vec3(x_right, 0, z_bottom), t10, normal, terrainLayer);
-            // Corrected Bottom-Right mapping
-        }
-    }
+    generateMap();
 }
 
 void map::loadTextures()
 {
     const auto terrainPath = "assets/terrain/";
     const std::vector<std::string> filenames = {
-        "Rock_Texture_01.png",
+        "RockWall_Texture_01.png",
         "Grass_Clovers_Texture_01.png",
+        "Rock_Texture_01.png",
         "Sand_Texture_01.png"
     };
 
@@ -196,26 +28,107 @@ void map::loadTextures()
 
 void map::render()
 {
+    m_terrainShaderProgram.enable();
+
+    //TODO Cache these values/add to uniform across all shaders
+
+    glUniform1i(m_terrainShaderProgram.getUniformLocation("mapSize"), m_size);
+    glUniform1f(m_terrainShaderProgram.getUniformLocation("heightScale"), 1.0f);
+
+    // Slot 0: terrain types
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, terrainTextureID);
+    glUniform1i(m_terrainShaderProgram.getUniformLocation("terrainMap"), 0);
+
+    // Slot 1: terrain heights
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, heightTextureID);
+    glUniform1i(m_terrainShaderProgram.getUniformLocation("heightMap"), 1);
+
+    // Slot 2: texture array
+    m_textureArray->Bind(GL_TEXTURE2);
+    glUniform1i(m_terrainShaderProgram.getUniformLocation("textureArray"), 2);
+    // Draw
     glBindVertexArray(m_VAO);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, m_size * m_size);
 
-    m_textureArray->Bind(GL_TEXTURE0);
-
-    glDrawArrays(GL_TRIANGLES, 0, wallVertices.size() + groundVertices.size());
-
+    // Clean up
     glBindVertexArray(0);
+    glUseProgram(0);
 }
 
 void map::generateMap()
 {
-    grid.resize(size * size);
+    //TODO Add back in walkable/buildable etc
+    terrainMap.resize(m_size * m_size);
 
-    for (int z = 0; z < size; ++z)
+    for (int z = 0; z < m_size; ++z)
     {
-        for (int x = 0; x < size; ++x)
+        for (int x = 0; x < m_size; ++x)
         {
             auto terrainType = Grass;
             if (x < 2 || z < 2) { terrainType = Sand; }
-            (*this)(z, x) = cell(terrainType, 0, true, true);
+            //(*this)(z, x) = cell(terrainType, true, true);
+            terrainMap[z * m_size + x] = terrainType;
         }
     }
+
+    CreateHeightMapTexture();
+    CreateTerrainMapTexture();
+}
+
+void map::CreateHeightMapTexture()
+{
+    // 1. Calculate vertex counts (grid dimensions + 1)
+    const int vWidth = m_size + 1;
+    const int vHeight = m_size + 1;
+
+    // 2. Allocate CPU array for heights
+    heightMap.resize(vWidth * vHeight, 0.0f);
+
+    // 3. Optional: Populate with sample data (e.g., creating a simple hill)
+    for (int y = 0; y < vHeight; ++y)
+    {
+        for (int x = 0; x < vWidth; ++x)
+        {
+            // Generates a smooth test mound in the center of your map
+            float dx = static_cast<float>(x) - (vWidth / 2.0f);
+            float dy = static_cast<float>(y) - (vHeight / 2.0f);
+            float dist = std::sqrt(dx * dx + dy * dy);
+            heightMap[y * vWidth + x] = std::max(0.0f, 10.0f - dist * 0.5f);
+        }
+    }
+
+    // 4. Generate the OpenGL Texture Object
+    glGenTextures(1, &heightTextureID);
+    glBindTexture(GL_TEXTURE_2D, heightTextureID);
+
+    // 5. Use GL_LINEAR filtering so the GPU smoothly interpolates between vertices
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // 6. Upload data as 32-bit Single Channel Floats (GL_R32F)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, vWidth, vHeight, 0, GL_RED, GL_FLOAT, heightMap.data());
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void map::CreateTerrainMapTexture()
+{
+    // 4. Generate the OpenGL Texture Object
+    glGenTextures(1, &terrainTextureID);
+    glBindTexture(GL_TEXTURE_2D, terrainTextureID);
+
+    // 5. Use GL_LINEAR filtering so the GPU smoothly interpolates between vertices
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // 6. Upload data as 32-bit Single Channel Floats (GL_R32F)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, m_size, m_size, 0, GL_RED, GL_FLOAT, terrainMap.data());
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
