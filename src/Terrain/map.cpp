@@ -1,6 +1,7 @@
 #include "map.h"
 
 #include <cmath>
+#include <random>
 
 map::map(const int size)
 {
@@ -33,7 +34,7 @@ void map::render()
     //TODO Cache these values/add to uniform across all shaders
 
     glUniform1i(m_terrainShaderProgram.getUniformLocation("mapSize"), m_size);
-    glUniform1f(m_terrainShaderProgram.getUniformLocation("heightScale"), 1.0f);
+    glUniform1f(m_terrainShaderProgram.getUniformLocation("heightScale"), 2.0f);
 
     // Slot 0: terrain types
     glActiveTexture(GL_TEXTURE0);
@@ -59,44 +60,79 @@ void map::render()
 
 void map::generateMap()
 {
-    //TODO Add back in walkable/buildable etc
-    terrainMap.resize(m_size * m_size);
+    constexpr siv::PerlinNoise::seed_type seed = 123456u;
+    const siv::PerlinNoise perlin{seed};
 
-    for (int z = 0; z < m_size; ++z)
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> distrib(1, terrainType::SIZE);
+
+    m_cells.resize(m_size * m_size);
+
+    for (int y = 0; y < m_size; ++y)
     {
         for (int x = 0; x < m_size; ++x)
         {
-            auto terrainType = Grass;
-            if (x < 2 || z < 2) { terrainType = Sand; }
-            //(*this)(z, x) = cell(terrainType, true, true);
-            terrainMap[z * m_size + x] = terrainType;
+            auto height = static_cast<float>(perlin.octave2D_01((x * 0.05), (y * 0.05), 2) * 4.0f - 1.75f);
+            if (height < 0) height = 0.0f; // Large flat areas, but will need to add in water in another run?
+
+            int random_num = distrib(gen);
+            m_cells[y * m_size + x] = cell(static_cast<terrainType>(random_num), height, true, true);
         }
     }
 
-    CreateHeightMapTexture();
     CreateTerrainMapTexture();
+    CreateHeightMapTexture();
+}
+
+void map::CreateTerrainMapTexture()
+{
+    std::vector<float> terrainMap(m_size * m_size);
+    for (size_t z = 0; z < m_size * m_size; ++z)
+    {
+        terrainMap[z] = m_cells[z].terrain;
+    }
+
+    // 4. Generate the OpenGL Texture Object
+    glGenTextures(1, &terrainTextureID);
+    glBindTexture(GL_TEXTURE_2D, terrainTextureID);
+
+    // 5. Use GL_LINEAR filtering so the GPU smoothly interpolates between vertices
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // 6. Upload data as 32-bit Single Channel Floats (GL_R32F)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, m_size, m_size, 0, GL_RED, GL_FLOAT, terrainMap.data());
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void map::CreateHeightMapTexture()
 {
-    // 1. Calculate vertex counts (grid dimensions + 1)
     const int vWidth = m_size + 1;
     const int vHeight = m_size + 1;
 
-    // 2. Allocate CPU array for heights
-    heightMap.resize(vWidth * vHeight, 0.0f);
+    std::vector<float> heightMap(vWidth * vHeight);
 
-    // 3. Optional: Populate with sample data (e.g., creating a simple hill)
-    for (int y = 0; y < vHeight; ++y)
+    // 1. Fill the main inner grid
+    for (int y = 0; y < m_size; ++y)
     {
-        for (int x = 0; x < vWidth; ++x)
+        for (int x = 0; x < m_size; ++x)
         {
-            // Generates a smooth test mound in the center of your map
-            float dx = static_cast<float>(x) - (vWidth / 2.0f);
-            float dy = static_cast<float>(y) - (vHeight / 2.0f);
-            float dist = std::sqrt(dx * dx + dy * dy);
-            heightMap[y * vWidth + x] = std::max(0.0f, 10.0f - dist * 0.5f);
+            heightMap[y * vWidth + x] = m_cells[y * m_size + x].height;
         }
+    }
+
+    // 2. Handle the edge/fence-post copying
+    for (int i = 0; i < (m_size + 1); ++i)
+    {
+        // Bottom edge (y = m_size): Copy from the row directly above it (y = m_size - 1)
+        heightMap[m_size * vWidth + i] = heightMap[(m_size - 1) * vWidth + i];
+
+        // Right edge (x = m_size): Copy from the column directly to its left (x = m_size - 1)
+        heightMap[i * vWidth + m_size] = heightMap[i * vWidth + (m_size - 1)];
     }
 
     // 4. Generate the OpenGL Texture Object
@@ -115,20 +151,4 @@ void map::CreateHeightMapTexture()
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void map::CreateTerrainMapTexture()
-{
-    // 4. Generate the OpenGL Texture Object
-    glGenTextures(1, &terrainTextureID);
-    glBindTexture(GL_TEXTURE_2D, terrainTextureID);
 
-    // 5. Use GL_LINEAR filtering so the GPU smoothly interpolates between vertices
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    // 6. Upload data as 32-bit Single Channel Floats (GL_R32F)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, m_size, m_size, 0, GL_RED, GL_FLOAT, terrainMap.data());
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-}

@@ -42,6 +42,7 @@ add_executable(${PROJECT_NAME}
         ${SOURCES}
         "include/glad/glad.c"
         ${IMGUI_SRCS}
+        include/PerlinNoise.h
 )
 
 # Include Directories

@@ -2,6 +2,8 @@
 
 #include <vector>
 
+# include "PerlinNoise.h"
+
 #include "TextureArray.h"
 #include "shaders/TerrainShader.h"
 
@@ -22,36 +24,35 @@ enum terrainType
     Grass,
     Rock,
     Sand,
+    SIZE,
 };
 
 struct cell
 {
     terrainType terrain;
+    float height; // height of the bottom left corner
     bool walkable;
     bool isBuildable;
 };
 
-static constexpr cell OutOfBoundsCell{MapEdge, false, false};
+static constexpr cell OutOfBoundsCell{MapEdge, 10.0f, false, false};
 
 class map
 {
 public:
     //TODO Ensure rows/columns are a multiple of CHUNK_SIZE?
     explicit map(int size = CHUNK_SIZE);
-
     void render();
+    [[nodiscard]] int getSize() const { return m_size; }
 
     void generateMap();
 
-    [[nodiscard]] int getSize() const { return m_size; }
-
 private:
     void loadTextures();
-    void CreateHeightMapTexture();
     void CreateTerrainMapTexture();
+    void CreateHeightMapTexture();
     int m_size;
-    std::vector<float> heightMap;
-    std::vector<float> terrainMap;
+    std::vector<cell> m_cells;
 
     TextureArray *m_textureArray;
     //TODO Should this just be a pointer?

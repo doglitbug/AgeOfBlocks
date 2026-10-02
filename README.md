@@ -54,3 +54,8 @@ Step 3 ???
 
 Change Synty Armature from X rotation 90 to 180 (?)
 In Rokoko select rest and click retarget. Should be aligned correctly.
+
+## Credits
+### Terrain textures
+
+Perlin noise generation: https://github.com/Reputeless/PerlinNoise
