@@ -33,7 +33,7 @@ void Camera::move(const glm::vec2 movement)
 {
     // Lets do forward/backward movement. Ignore the up/down so that we walk along the ground (instead of flying)
     // TODO Dont ignore if flying
-    m_position += glm::vec3(m_direction.x, 0.0f, m_direction.z) * movement.y;
+    m_position += glm::vec3(m_direction.x, m_direction.y, m_direction.z) * movement.y;
 
     // Let's do strafing!
     const glm::vec3 rightVector = glm::cross(m_direction, m_up);

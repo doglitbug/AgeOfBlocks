@@ -34,7 +34,7 @@ void map::render()
     //TODO Cache these values/add to uniform across all shaders
 
     glUniform1i(m_terrainShaderProgram.getUniformLocation("mapSize"), m_size);
-    glUniform1f(m_terrainShaderProgram.getUniformLocation("heightScale"), 2.0f);
+    glUniform1f(m_terrainShaderProgram.getUniformLocation("heightScale"), 1.0f);
 
     // Slot 0: terrain types
     glActiveTexture(GL_TEXTURE0);
@@ -73,16 +73,51 @@ void map::generateMap()
     {
         for (int x = 0; x < m_size; ++x)
         {
-            auto height = static_cast<float>(perlin.octave2D_01((x * 0.05), (y * 0.05), 2) * 4.0f - 1.75f);
+            auto height = static_cast<float>(perlin.octave2D_01((x * 0.05), (y * 0.05), 2) * 6.0f - 1.75f);
             if (height < 0) height = 0.0f; // Large flat areas, but will need to add in water in another run?
 
-            int random_num = distrib(gen);
+            //int random_num = distrib(gen);
+            int random_num = terrainType::Grass;
+            if (height == 0.0f) random_num = terrainType::Sand;
+            if (height > 1.0f) random_num = terrainType::Rock;
             m_cells[y * m_size + x] = cell(static_cast<terrainType>(random_num), height, true, true);
         }
     }
 
     CreateTerrainMapTexture();
     CreateHeightMapTexture();
+}
+
+float map::getHeight(const float x, const float z)
+{
+    // 1. Get the base grid coordinates (bottom-left corner)
+    int gridX = static_cast<int>(std::floor(x));
+    int gridZ = static_cast<int>(std::floor(z));
+
+    // 2. Calculate the fractional distances inside the cell [0.0, 1.0)
+    float fractX = x - std::floor(x);
+    float fractZ = z - std::floor(z);
+
+    // 3. Prevent out-of-bounds errors by staying within the grid limits
+    // Assuming m_size is the width and depth, and m_cells is size (m_size * m_size)
+    int nextX = std::min(gridX + 1, m_size - 1);
+    int nextZ = std::min(gridZ + 1, m_size - 1);
+    gridX = std::max(0, std::min(gridX, m_size - 1));
+    gridZ = std::max(0, std::min(gridZ, m_size - 1));
+
+    // 4. Fetch the heights of the 4 surrounding corners (Assuming Z is row, X is column)
+    float h00 = m_cells[gridZ * m_size + gridX].height; // Bottom-Left  (X, Z)
+    float h10 = m_cells[gridZ * m_size + nextX].height; // Bottom-Right (X+1, Z)  <-- Fixed
+    float h01 = m_cells[nextZ * m_size + gridX].height; // Top-Left     (X, Z+1)  <-- Fixed
+    float h11 = m_cells[nextZ * m_size + nextX].height; // Top-Right    (X+1, Z+1)
+
+    // 5. Bilinear interpolation formula
+    // Interpolate along X for both Z lines
+    float hBottom = h00 + fractX * (h10 - h00);
+    float hTop = h01 + fractX * (h11 - h01);
+
+    // Interpolate along Z between the two X results
+    return hBottom + fractZ * (hTop - hBottom);
 }
 
 void map::CreateTerrainMapTexture()

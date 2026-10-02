@@ -47,6 +47,8 @@ public:
 
     void generateMap();
 
+    float getHeight(float x, float z);
+
 private:
     void loadTextures();
     void CreateTerrainMapTexture();

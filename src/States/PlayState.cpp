@@ -44,7 +44,7 @@ void PlayState::onEnter()
     gSamplerLocation = m_3dShaderProgram.getUniformLocation("gSampler");
 
     auto start = std::chrono::steady_clock::now();
-    m_map = new map(16);
+    m_map = new map(64);
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
@@ -82,6 +82,9 @@ void PlayState::update(float deltaTime)
     {
         m_meshNumber--;
     }
+
+    //Hack for player height
+    mCamera->m_position.y = m_map->getHeight(mCamera->m_position.x, mCamera->m_position.z)+1.8f;
 }
 
 void PlayState::render()
@@ -115,7 +118,7 @@ void PlayState::drawHUD()
     ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f));
     ImGui::Begin("Debug menu");
     //ImGui::Text("Current time of day: %f", timeOfDay);
-    //ImGui::Text("Camera position (x,y,z): %f %f %f", mCamera.m_position.x, mCamera.m_position.y, mCamera.m_position.z);
+    ImGui::Text("Camera position (x,y,z): %f %f %f", mCamera->m_position.x, mCamera->m_position.y, mCamera->m_position.z);
     ImGui::Text("Current language: %s", App::get()->getLanguage()->get("LANGUAGE").c_str());
     ImGui::End();
 
