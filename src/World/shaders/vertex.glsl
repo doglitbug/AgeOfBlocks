@@ -22,10 +22,17 @@ uniform mat4 gBones[MAX_BONES];
 
 void main()
 {
-    mat4 BoneTransform = gBones[aBoneIDs[0]] * aWeights[0];
-    BoneTransform     += gBones[aBoneIDs[1]] * aWeights[1];
-    BoneTransform     += gBones[aBoneIDs[2]] * aWeights[2];
-    BoneTransform     += gBones[aBoneIDs[3]] * aWeights[3];
+    mat4 BoneTransform;
+
+    // Check if the vertex has any bone weights assigned
+    if (aWeights[0] == 0.0 && aWeights[1] == 0.0 && aWeights[2] == 0.0 && aWeights[3] == 0.0) {
+        BoneTransform = mat4(1.0); // Identity matrix (leaves position unchanged)
+    } else {
+        BoneTransform = gBones[aBoneIDs[0]] * aWeights[0];
+        BoneTransform += gBones[aBoneIDs[1]] * aWeights[1];
+        BoneTransform += gBones[aBoneIDs[2]] * aWeights[2];
+        BoneTransform += gBones[aBoneIDs[3]] * aWeights[3];
+    }
 
     vec4 bonedPosition = BoneTransform * vec4(aPosition, 1.0);
 

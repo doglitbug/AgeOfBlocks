@@ -9,7 +9,6 @@ out vec2 TextureCoord;
 out vec2 GridCoords;
 
 uniform int mapSize;
-uniform float heightScale;
 uniform sampler2D heightMap;
 
 void main() {
@@ -38,8 +37,7 @@ void main() {
 
     // 4. Look up vertical elevation using our continuous heightmap
     vec2 heightUV = worldPos2D / mapDimensions;
-    float rawHeight = textureLod(heightMap, heightUV, 0.0).r;
-    float finalHeight = rawHeight * heightScale;
+    float finalHeight = textureLod(heightMap, heightUV, 0.0).r;
 
     // 5. Final positioning output to clip space
     gl_Position = projection * view * vec4(worldPos2D.x, finalHeight, worldPos2D.y, 1.0);

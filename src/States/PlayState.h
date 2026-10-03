@@ -37,7 +37,7 @@ private:
     void RenderScene();
 
     ObjectMesh m_playerObject;
-    ObjectMesh m_NPC;
+    ObjectMesh m_tree;
 
     map *m_map;
 

@@ -1,5 +1,7 @@
 #include "map.h"
 
+#include "PerlinNoise.h"
+
 #include <cmath>
 #include <random>
 
@@ -11,6 +13,8 @@ map::map(const int size)
     m_terrainShaderProgram.init();
     glGenVertexArrays(1, &m_VAO);
     generateMap();
+    CreateTerrainMapTexture();
+    CreateHeightMapTexture();
 }
 
 void map::loadTextures()
@@ -31,10 +35,7 @@ void map::render()
 {
     m_terrainShaderProgram.enable();
 
-    //TODO Cache these values/add to uniform across all shaders
-
     glUniform1i(m_terrainShaderProgram.getUniformLocation("mapSize"), m_size);
-    glUniform1f(m_terrainShaderProgram.getUniformLocation("heightScale"), 1.0f);
 
     // Slot 0: terrain types
     glActiveTexture(GL_TEXTURE0);
@@ -60,36 +61,47 @@ void map::render()
 
 void map::generateMap()
 {
+    int entityID = 0;
     constexpr siv::PerlinNoise::seed_type seed = 123456u;
     const siv::PerlinNoise perlin{seed};
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> distrib(1, terrainType::SIZE);
+    std::uniform_int_distribution<int> distrib(1, TerrainType::SIZE);
 
-    m_cells.resize(m_size * m_size);
+    m_grid.resize(m_size * m_size);
 
-    for (int y = 0; y < m_size; ++y)
+    for (int z = 0; z < m_size; ++z)
     {
         for (int x = 0; x < m_size; ++x)
         {
-            auto height = static_cast<float>(perlin.octave2D_01((x * 0.05), (y * 0.05), 2) * 6.0f - 1.75f);
-            if (height < 0) height = 0.0f; // Large flat areas, but will need to add in water in another run?
+            TerrainType terrain = Grass;
+            int newEntityID = 0;
+
+            const auto height = std::max(
+                static_cast<float>(perlin.octave2D_01((x * 0.05), (z * 0.05), 2) * 6.0f - 1.75f),
+                0.0f);
 
             //int random_num = distrib(gen);
-            int random_num = terrainType::Grass;
-            if (height == 0.0f) random_num = terrainType::Sand;
-            if (height > 1.0f) random_num = terrainType::Rock;
-            m_cells[y * m_size + x] = cell(static_cast<terrainType>(random_num), height, true, true);
+            const auto treeHeight = std::max(static_cast<float>(perlin.octave2D_01((x * 0.15), (z * 0.15), 4) - 0.4f),
+                                             0.0f);
+
+            if (treeHeight == 0.0f)
+            {
+                m_trees.emplace_back(++entityID, glm::vec3(x, height, z), TREE, 100);
+                newEntityID = entityID;
+                terrain = Sand;
+            }
+
+            m_grid[z * m_size + x] = Tile(terrain, height, newEntityID);
         }
     }
-
-    CreateTerrainMapTexture();
-    CreateHeightMapTexture();
 }
 
-float map::getHeight(const float x, const float z)
+float map::getHeight(const float x, const float z) const
 {
+    //TODO Might be better to do baycentric height, to account for where the triangle split is
+
     // 1. Get the base grid coordinates (bottom-left corner)
     int gridX = static_cast<int>(std::floor(x));
     int gridZ = static_cast<int>(std::floor(z));
@@ -106,10 +118,10 @@ float map::getHeight(const float x, const float z)
     gridZ = std::max(0, std::min(gridZ, m_size - 1));
 
     // 4. Fetch the heights of the 4 surrounding corners (Assuming Z is row, X is column)
-    float h00 = m_cells[gridZ * m_size + gridX].height; // Bottom-Left  (X, Z)
-    float h10 = m_cells[gridZ * m_size + nextX].height; // Bottom-Right (X+1, Z)  <-- Fixed
-    float h01 = m_cells[nextZ * m_size + gridX].height; // Top-Left     (X, Z+1)  <-- Fixed
-    float h11 = m_cells[nextZ * m_size + nextX].height; // Top-Right    (X+1, Z+1)
+    float h00 = m_grid[gridZ * m_size + gridX].height; // Bottom-Left  (X, Z)
+    float h10 = m_grid[gridZ * m_size + nextX].height; // Bottom-Right (X+1, Z)  <-- Fixed
+    float h01 = m_grid[nextZ * m_size + gridX].height; // Top-Left     (X, Z+1)  <-- Fixed
+    float h11 = m_grid[nextZ * m_size + nextX].height; // Top-Right    (X+1, Z+1)
 
     // 5. Bilinear interpolation formula
     // Interpolate along X for both Z lines
@@ -120,12 +132,26 @@ float map::getHeight(const float x, const float z)
     return hBottom + fractZ * (hTop - hBottom);
 }
 
+bool map::isWalkable(float x, float z) const
+{
+    // 1. Get the base grid coordinates (bottom-left corner)
+    int gridX = static_cast<int>(std::floor(x));
+    int gridZ = static_cast<int>(std::floor(z));
+
+    if (gridX < 0 || gridX > m_size || gridZ < 0 || gridZ > m_size) return false;
+    if (m_grid[gridZ * m_size + gridX].terrain == DeepWater) return false;
+
+    //TODO Check static object array
+
+    return true;
+}
+
 void map::CreateTerrainMapTexture()
 {
     std::vector<float> terrainMap(m_size * m_size);
-    for (size_t z = 0; z < m_size * m_size; ++z)
+    for (size_t i = 0; i < m_size * m_size; ++i)
     {
-        terrainMap[z] = m_cells[z].terrain;
+        terrainMap[i] = m_grid[i].terrain;
     }
 
     // 4. Generate the OpenGL Texture Object
@@ -152,11 +178,11 @@ void map::CreateHeightMapTexture()
     std::vector<float> heightMap(vWidth * vHeight);
 
     // 1. Fill the main inner grid
-    for (int y = 0; y < m_size; ++y)
+    for (int z = 0; z < m_size; ++z)
     {
         for (int x = 0; x < m_size; ++x)
         {
-            heightMap[y * vWidth + x] = m_cells[y * m_size + x].height;
+            heightMap[z * vWidth + x] = m_grid[z * m_size + x].height;
         }
     }
 

@@ -35,8 +35,8 @@ void PlayState::onEnter()
     m_playerObject.LoadMesh("assets/models/villager.gltf");
     m_playerObject.m_position = glm::vec3(5.0f, 0.0f, 5.0f);
 
-    m_NPC.LoadMesh("assets/models/villager.gltf");
-    m_NPC.m_position = glm::vec3(2.0f, 0.0f, 2.0f);
+    m_tree.LoadMesh("assets/models/terrain/SM_Generic_Tree_02.gltf");
+    m_tree.m_position = glm::vec3(2.0f, 2.0f, 2.0f);
 
     // Only look this up once and save!
     gModelLocation = m_3dShaderProgram.getUniformLocation("model");
@@ -165,8 +165,8 @@ void PlayState::RenderScene()
     }
     m_playerObject.Render(m_meshNumber);
 
-    glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_NPC.GetWorldMatrix()));
-    m_NPC.Render(21);
+    glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_tree.GetWorldMatrix()));
+    m_tree.Render(0);
 
 
     // Draw the world
