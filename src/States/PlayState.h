@@ -5,7 +5,7 @@
 #include "../World/CharacterShader.h"
 #include "Terrain/map.h"
 #include "Terrain/shaders/TerrainShader.h"
-#include "ObjectMesh.h"
+#include "ObjectAnimated.h"
 #include "Observers.h"
 
 class PlayState: public BaseState, IObserver
@@ -36,8 +36,8 @@ private:
     void CompileShaders();
     void RenderScene();
 
-    ObjectMesh m_playerObject;
-    ObjectMesh m_tree;
+    ObjectAnimated m_playerObject;
+    ObjectAnimated m_tree;
 
     map *m_map;
 

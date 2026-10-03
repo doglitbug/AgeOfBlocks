@@ -1,4 +1,4 @@
-#include "ObjectMesh.h"
+#include "ObjectAnimated.h"
 
 #include <assimp/postprocess.h>
 
@@ -12,14 +12,14 @@
 
 #define DEBUG(x) std::cout << "Debug: " << x << std::endl;
 
-ObjectMesh::ObjectMesh()
+ObjectAnimated::ObjectAnimated()
 {
     m_position = glm::vec3(0.0f, 0.0f, 0.0f);
     m_rotation = glm::vec3(0.0f, 0.0f, 0.0f);
     m_scale = 1.0f;
 }
 
-bool ObjectMesh::LoadMesh(const std::string &filename)
+bool ObjectAnimated::LoadMesh(const std::string &filename)
 {
     glGenVertexArrays(1, &m_VAO);
     glBindVertexArray(m_VAO);
@@ -46,7 +46,7 @@ bool ObjectMesh::LoadMesh(const std::string &filename)
     return true;
 }
 
-void ObjectMesh::Render(const unsigned int meshIndex) const
+void ObjectAnimated::Render(const unsigned int meshIndex) const
 {
     // TODO If meshIndex = -1, render all?
     glBindVertexArray(m_VAO);
@@ -66,7 +66,7 @@ void ObjectMesh::Render(const unsigned int meshIndex) const
     glBindVertexArray(0);
 }
 
-glm::mat4 ObjectMesh::GetWorldMatrix() const
+glm::mat4 ObjectAnimated::GetWorldMatrix() const
 {
     constexpr auto identity = glm::mat4(1.0f);
     const auto translation = glm::translate(identity, m_position);
@@ -76,7 +76,7 @@ glm::mat4 ObjectMesh::GetWorldMatrix() const
     return translation * rotation * m_scale;
 }
 
-void ObjectMesh::LoadFromFile(const aiScene *pScene, const std::string &filename)
+void ObjectAnimated::LoadFromFile(const aiScene *pScene, const std::string &filename)
 {
     m_meshes.resize(pScene->mNumMeshes);
     m_textures.resize(pScene->mNumMaterials);
@@ -97,7 +97,7 @@ void ObjectMesh::LoadFromFile(const aiScene *pScene, const std::string &filename
     LoadMaterials(pScene, filename);
 }
 
-void ObjectMesh::CountVerticesAndIndices(const aiScene *pScene, unsigned int &numberVertices, unsigned int &numberIndices)
+void ObjectAnimated::CountVerticesAndIndices(const aiScene *pScene, unsigned int &numberVertices, unsigned int &numberIndices)
 {
     for (unsigned int i = 0; i < m_meshes.size(); i++)
     {
@@ -111,7 +111,7 @@ void ObjectMesh::CountVerticesAndIndices(const aiScene *pScene, unsigned int &nu
     }
 }
 
-void ObjectMesh::ReserveSpace(const unsigned int numberVertices, const unsigned int numberIndices)
+void ObjectAnimated::ReserveSpace(const unsigned int numberVertices, const unsigned int numberIndices)
 {
     m_indices.reserve(numberIndices);
     m_positions.reserve(numberVertices);
@@ -120,7 +120,7 @@ void ObjectMesh::ReserveSpace(const unsigned int numberVertices, const unsigned 
     m_bones.resize(numberVertices);
 }
 
-void ObjectMesh::LoadMesh(const uint meshIndex, const aiMesh *paiMesh)
+void ObjectAnimated::LoadMesh(const uint meshIndex, const aiMesh *paiMesh)
 {
     // Populate vertex attribute vectors
     for (unsigned int i = 0; i < paiMesh->mNumVertices; i++)
@@ -155,7 +155,7 @@ void ObjectMesh::LoadMesh(const uint meshIndex, const aiMesh *paiMesh)
     }
 }
 
-void ObjectMesh::LoadBone(const uint meshIndex, const aiBone* pBone)
+void ObjectAnimated::LoadBone(const uint meshIndex, const aiBone* pBone)
 {
     const int boneId = GetBoneId(pBone);
 
@@ -172,7 +172,7 @@ void ObjectMesh::LoadBone(const uint meshIndex, const aiBone* pBone)
     }
 }
 
-int ObjectMesh::GetBoneId(const aiBone* pBone)
+int ObjectAnimated::GetBoneId(const aiBone* pBone)
 {
     int BoneIndex = 0;
     std::string BoneName(pBone->mName.C_Str());
@@ -189,7 +189,7 @@ int ObjectMesh::GetBoneId(const aiBone* pBone)
     return BoneIndex;
 }
 
-void ObjectMesh::GetBoneTransforms(std::vector<glm::mat4>& boneTransforms, const float animationTime)
+void ObjectAnimated::GetBoneTransforms(std::vector<glm::mat4>& boneTransforms, const float animationTime)
 {
     //TODO Remove hardcoded mAnimations number here
     auto ticksPerSecond = static_cast<float>(pScene->mAnimations[0]->mTicksPerSecond);
@@ -209,7 +209,7 @@ void ObjectMesh::GetBoneTransforms(std::vector<glm::mat4>& boneTransforms, const
     }
 }
 
-void ObjectMesh::ReadNodeHierarchy(const float animationTimeTicks, const aiNode* pNode, const glm::mat4& parentTransform)
+void ObjectAnimated::ReadNodeHierarchy(const float animationTimeTicks, const aiNode* pNode, const glm::mat4& parentTransform)
 {
     const std::string nodeName(pNode->mName.C_Str());
     const aiAnimation* pAnimation = pScene->mAnimations[0];
@@ -252,7 +252,7 @@ void ObjectMesh::ReadNodeHierarchy(const float animationTimeTicks, const aiNode*
     }
 }
 
-void ObjectMesh::CalculateInterpolatedScaling(aiVector3D& out, float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+void ObjectAnimated::CalculateInterpolatedScaling(aiVector3D& out, float animationTimeTicks, const aiNodeAnim* pNodeAnim)
 {
     if (pNodeAnim->mNumScalingKeys == 1)
     {
@@ -271,7 +271,7 @@ void ObjectMesh::CalculateInterpolatedScaling(aiVector3D& out, float animationTi
     out = start + factor * (end-start);
 }
 
-unsigned int ObjectMesh::FindScaling(const float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+unsigned int ObjectAnimated::FindScaling(const float animationTimeTicks, const aiNodeAnim* pNodeAnim)
 {
     for (uint i = 0 ; i < pNodeAnim->mNumScalingKeys - 1 ; i++) {
         float t = (float)pNodeAnim->mScalingKeys[i + 1].mTime;
@@ -283,7 +283,7 @@ unsigned int ObjectMesh::FindScaling(const float animationTimeTicks, const aiNod
     return 0;
 }
 
-void ObjectMesh::CalculateInterpolatedRotation(aiQuaternion& out, float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+void ObjectAnimated::CalculateInterpolatedRotation(aiQuaternion& out, float animationTimeTicks, const aiNodeAnim* pNodeAnim)
 {
     if (pNodeAnim->mNumRotationKeys == 1) {
         out = pNodeAnim->mRotationKeys[0].mValue;
@@ -302,7 +302,7 @@ void ObjectMesh::CalculateInterpolatedRotation(aiQuaternion& out, float animatio
     out.Normalize();
 }
 
-unsigned int ObjectMesh::FindRotation(float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+unsigned int ObjectAnimated::FindRotation(float animationTimeTicks, const aiNodeAnim* pNodeAnim)
 {
     for (uint i = 0 ; i < pNodeAnim->mNumRotationKeys - 1 ; i++) {
         float t = (float)pNodeAnim->mRotationKeys[i + 1].mTime;
@@ -314,7 +314,7 @@ unsigned int ObjectMesh::FindRotation(float animationTimeTicks, const aiNodeAnim
     return 0;
 }
 
-void ObjectMesh::CalculateInterpolatedPosition(aiVector3D& out, float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+void ObjectAnimated::CalculateInterpolatedPosition(aiVector3D& out, float animationTimeTicks, const aiNodeAnim* pNodeAnim)
 {
     // we need at least two values to interpolate...
     if (pNodeAnim->mNumPositionKeys == 1) {
@@ -335,7 +335,7 @@ void ObjectMesh::CalculateInterpolatedPosition(aiVector3D& out, float animationT
     out = Start + Factor * (End - Start);
 }
 
-unsigned int ObjectMesh::FindPosition(float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+unsigned int ObjectAnimated::FindPosition(float animationTimeTicks, const aiNodeAnim* pNodeAnim)
 {
     for (uint i = 0 ; i < pNodeAnim->mNumPositionKeys - 1 ; i++) {
         float t = (float)pNodeAnim->mPositionKeys[i + 1].mTime;
@@ -347,7 +347,7 @@ unsigned int ObjectMesh::FindPosition(float animationTimeTicks, const aiNodeAnim
     return 0;
 }
 
-const aiNodeAnim* ObjectMesh::FindNodeAnim(const aiAnimation* pAnimation, const std::string& nodeName)
+const aiNodeAnim* ObjectAnimated::FindNodeAnim(const aiAnimation* pAnimation, const std::string& nodeName)
 {
     for (uint i = 0 ; i < pAnimation->mNumChannels ; i++) {
         const aiNodeAnim* pNodeAnim = pAnimation->mChannels[i];
@@ -360,7 +360,7 @@ const aiNodeAnim* ObjectMesh::FindNodeAnim(const aiAnimation* pAnimation, const 
     return nullptr;
 }
 
-void ObjectMesh::LoadMaterials(const aiScene *xpScene, const std::string &filename)
+void ObjectAnimated::LoadMaterials(const aiScene *xpScene, const std::string &filename)
 {
     // Get directory path from filename
     std::filesystem::path filePath(filename);
@@ -391,7 +391,7 @@ void ObjectMesh::LoadMaterials(const aiScene *xpScene, const std::string &filena
     }
 }
 
-void ObjectMesh::PopulateBuffers() const
+void ObjectAnimated::PopulateBuffers() const
 {
     // Index Buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffers[INDEX_BUFFER]);
@@ -426,7 +426,7 @@ void ObjectMesh::PopulateBuffers() const
 
 }
 
-void ObjectMesh::checkOpenGLError(const std::string &location)
+void ObjectAnimated::checkOpenGLError(const std::string &location)
 {
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR)
