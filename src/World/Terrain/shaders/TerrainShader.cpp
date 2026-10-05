@@ -8,14 +8,14 @@ void TerrainShader::init()
 
     std::string vs, fs;
 
-    if (!Utils::readFileToString("src/Terrain/shaders/vertex.glsl", vs))
+    if (!Utils::readFileToString("src/World/Terrain/shaders/vertex.glsl", vs))
     {
         exit(1);
     };
 
     addShader(GL_VERTEX_SHADER, vs.c_str());
 
-    if (!Utils::readFileToString("src/Terrain/shaders/fragment.glsl", fs))
+    if (!Utils::readFileToString("src/World/Terrain/shaders/fragment.glsl", fs))
     {
         exit(1);
     };

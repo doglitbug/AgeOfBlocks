@@ -21,40 +21,26 @@ set(IMGUI_SRCS
         # Include the specific SDL3 and OpenGL3 backend implementations
         ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
         ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-        src/States/PlayState.cpp
-        src/States/PlayState.h
 )
 
 # Define Executable
-file(GLOB_RECURSE SOURCES
-        "src/*.cpp"
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
+        "include"
+        "include/glad/glad.c"
         "src/*.h"
-        "src/States/*.cpp"
-        "src/States/*.h"
-        "src/Subsystems*.cpp"
-        "src/Subsystems*.h"
-        "src/World*.cpp"
-        "src/World*.h"
-        "src/GUI*.cpp"
-        "src/GUI*.h"
+        "src/*.cpp"
 )
 add_executable(${PROJECT_NAME}
         ${SOURCES}
-        "include/glad/glad.c"
         ${IMGUI_SRCS}
-        include/PerlinNoise.h
 )
 
 # Include Directories
 target_include_directories(${PROJECT_NAME} PRIVATE
-        "include/"
+        "include"
         ${IMGUI_DIR}
         ${IMGUI_DIR}/backends
         "src"
-        "src/Subsystems/"
-        "src/World/"
-        "src/GUI/"
-        "src/States"
 )
 
 # Link Libraries

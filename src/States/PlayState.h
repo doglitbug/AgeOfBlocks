@@ -2,10 +2,9 @@
 #include "BaseState.h"
 #include "Camera.h"
 #include "Texture.h"
-#include "../World/CharacterShader.h"
-#include "Terrain/map.h"
-#include "Terrain/shaders/TerrainShader.h"
-#include "ObjectAnimated.h"
+#include "World/Characters/shaders/CharacterShader.h"
+#include "World/map.h"
+#include "World/Characters/ObjectAnimated.h"
 #include "Observers.h"
 
 class PlayState: public BaseState, IObserver

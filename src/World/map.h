@@ -2,9 +2,11 @@
 
 #include <vector>
 
+#include "ObjectInstanced.h"
 #include "TextureArray.h"
 #include "glm/vec3.hpp"
-#include "shaders/TerrainShader.h"
+#include "Resources/shaders/StaticShader.h"
+#include "World/Terrain/shaders/TerrainShader.h"
 
 // Make sure this is a power of 2, for SIMD optimization later on?
 #define CHUNK_SIZE 32
@@ -17,40 +19,42 @@
 #define t10 glm::vec2(1.0f, 0.0f) // Bottom right
 #define t11 glm::vec2(1.0f, 1.0f) // Top right
 
-enum TerrainType
-{
-    MapEdge = 0,
-    Grass,
-    Rock,
-    Sand,
-    Water,
-    DeepWater,
-    SIZE,
-};
-
-enum StaticObjectType
-{
-    TREE = 1
-};
-
-struct StaticObject
-{
-    uint32_t entityID;
-    glm::vec3 position; // Here so no padding required
-    StaticObjectType type;
-    int health;
-};
-
-struct Tile
-{
-    TerrainType terrain;
-    float height; // height of the bottom left corner
-    uint32_t entityID;
-};
-
 class map
 {
 public:
+    enum TerrainType
+    {
+        MapEdge = 0,
+        Grass,
+        Rock,
+        Sand,
+        Water,
+        DeepWater,
+        SIZE,
+    };
+
+    enum StaticObjectType
+    {
+        TREE = 1
+    };
+
+    struct StaticObject
+    {
+        uint32_t entityID;
+        glm::vec3 position; // Here so no padding required
+        StaticObjectType type;
+        int health;
+    };
+
+    struct Tile
+    {
+        TerrainType terrain;
+        float height; // height of the bottom left corner
+        uint32_t entityID;
+    };
+
+
+
     //TODO Ensure rows/columns are a multiple of CHUNK_SIZE?
     explicit map(int size = CHUNK_SIZE);
     void render();
@@ -84,10 +88,13 @@ private:
     int m_size;
     std::vector<Tile> m_grid;
     std::vector<StaticObject> m_trees;
+    ObjectInstanced m_treesInstance;
 
     TextureArray* m_textureArray;
     //TODO Should this just be a pointer?
     TerrainShader m_terrainShaderProgram;
+    StaticShader m_TreeShader;
+
     GLuint m_VAO;
     GLuint heightTextureID;
     GLuint terrainTextureID;

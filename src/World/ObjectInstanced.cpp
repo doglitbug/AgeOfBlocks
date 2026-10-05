@@ -6,18 +6,12 @@
 #include <filesystem>
 #include <SDL3/SDL_log.h>
 
+#include "map.h"
 #include "glm/detail/type_quat.hpp"
-#include "glm/ext/matrix_transform.hpp"
-#include "glm/gtc/quaternion.hpp"
 
 #define DEBUG(x) std::cout << "Debug: " << x << std::endl;
 
-ObjectInstanced::ObjectInstanced()
-{
-    m_scale = 1.0f;
-}
-
-bool ObjectInstanced::LoadMesh(const std::string &filename)
+bool ObjectInstanced::LoadMesh(const std::string& filename)
 {
     glGenVertexArrays(1, &m_VAO);
     glBindVertexArray(m_VAO);
@@ -44,6 +38,18 @@ bool ObjectInstanced::LoadMesh(const std::string &filename)
     return true;
 }
 
+void ObjectInstanced::loadData(const std::vector<glm::vec3>& p_objects)
+{
+    m_numberInstances = p_objects.size();
+    if (m_numberInstances == 0) return;
+    glBindBuffer(GL_ARRAY_BUFFER, m_buffers[INSTANCED_POSITIONS]);
+    // 2. Orphan the buffer (tells the driver it can discard old data to prevent stuttering)
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * m_numberInstances, nullptr, GL_STREAM_DRAW);
+
+    // 3. Upload the fresh instance data
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * m_numberInstances, p_objects.data(), GL_STREAM_DRAW);
+}
+
 void ObjectInstanced::Render(const unsigned int meshIndex) const
 {
     // TODO If meshIndex = -1, render all?
@@ -55,16 +61,23 @@ void ObjectInstanced::Render(const unsigned int meshIndex) const
     {
         m_textures[materialIndex]->Bind(COLOR_TEXTURE_UNIT);
     }
-    glDrawElementsBaseVertex(GL_TRIANGLES,
-                             m_meshes[i].numberIndices,
-                             GL_UNSIGNED_INT,
-                             (void *)(sizeof(unsigned int) * m_meshes[i].startingIndex),
-                             m_meshes[i].startingVertex);
+    // glDrawElementsBaseVertex(GL_TRIANGLES,
+    //                          m_meshes[i].numberIndices,
+    //                          GL_UNSIGNED_INT,
+    //                          (void*)(sizeof(unsigned int) * m_meshes[i].startingIndex),
+    //                          m_meshes[i].startingVertex);
+
+    glDrawElementsInstancedBaseVertex(GL_TRIANGLES,
+                                      m_meshes[i].numberIndices,
+                                      GL_UNSIGNED_INT,
+                                      (void*)(sizeof(unsigned int) * m_meshes[i].startingIndex),
+                                      m_numberInstances,
+                                      m_meshes[i].startingVertex);
 
     glBindVertexArray(0);
 }
 
-void ObjectInstanced::LoadFromFile(const aiScene *pScene, const std::string &filename)
+void ObjectInstanced::LoadFromFile(const aiScene* pScene, const std::string& filename)
 {
     m_meshes.resize(pScene->mNumMeshes);
     m_textures.resize(pScene->mNumMaterials);
@@ -78,14 +91,15 @@ void ObjectInstanced::LoadFromFile(const aiScene *pScene, const std::string &fil
     // Load all meshes
     for (unsigned int i = 0; i < m_meshes.size(); i++)
     {
-        const aiMesh *paiMesh = pScene->mMeshes[i];
+        const aiMesh* paiMesh = pScene->mMeshes[i];
         LoadMesh(i, paiMesh);
     }
 
     LoadMaterials(pScene, filename);
 }
 
-void ObjectInstanced::CountVerticesAndIndices(const aiScene *pScene, unsigned int &numberVertices, unsigned int &numberIndices)
+void ObjectInstanced::CountVerticesAndIndices(const aiScene* pScene, unsigned int& numberVertices,
+                                              unsigned int& numberIndices)
 {
     for (unsigned int i = 0; i < m_meshes.size(); i++)
     {
@@ -107,14 +121,16 @@ void ObjectInstanced::ReserveSpace(const unsigned int numberVertices, const unsi
     m_normals.reserve(numberVertices);
 }
 
-void ObjectInstanced::LoadMesh(const uint meshIndex, const aiMesh *paiMesh)
+void ObjectInstanced::LoadMesh(const uint meshIndex, const aiMesh* paiMesh)
 {
     // Populate vertex attribute vectors
     for (unsigned int i = 0; i < paiMesh->mNumVertices; i++)
     {
-        const aiVector3D &pPos = paiMesh->mVertices[i];
-        const aiVector3D &pTextureCoords = paiMesh->HasTextureCoords(0) ? paiMesh->mTextureCoords[0][i] : aiVector3D(0.0f, 0.0f, 0.0f);
-        const aiVector3D &pNormal = paiMesh->mNormals ? paiMesh->mNormals[i]:aiVector3D(0.0f, 1.0f, 0.0f);
+        const aiVector3D& pPos = paiMesh->mVertices[i];
+        const aiVector3D& pTextureCoords = paiMesh->HasTextureCoords(0)
+                                               ? paiMesh->mTextureCoords[0][i]
+                                               : aiVector3D(0.0f, 0.0f, 0.0f);
+        const aiVector3D& pNormal = paiMesh->mNormals ? paiMesh->mNormals[i] : aiVector3D(0.0f, 1.0f, 0.0f);
 
         // A -90-degree rotation around X changes: (X, Y, Z) -> (X, Z, -Y)
         //m_positions.emplace_back(pPos.x, pPos.z, -pPos.y);
@@ -126,14 +142,14 @@ void ObjectInstanced::LoadMesh(const uint meshIndex, const aiMesh *paiMesh)
     // Populate the index buffer
     for (unsigned int i = 0; i < paiMesh->mNumFaces; i++)
     {
-        const aiFace &face = paiMesh->mFaces[i];
+        const aiFace& face = paiMesh->mFaces[i];
         m_indices.push_back(face.mIndices[0]);
         m_indices.push_back(face.mIndices[1]);
         m_indices.push_back(face.mIndices[2]);
     }
 }
 
-void ObjectInstanced::LoadMaterials(const aiScene *xpScene, const std::string &filename)
+void ObjectInstanced::LoadMaterials(const aiScene* xpScene, const std::string& filename)
 {
     // Get directory path from filename
     std::filesystem::path filePath(filename);
@@ -141,7 +157,7 @@ void ObjectInstanced::LoadMaterials(const aiScene *xpScene, const std::string &f
 
     for (unsigned int i = 0; i < pScene->mNumMaterials; i++)
     {
-        const aiMaterial *pMaterial = pScene->mMaterials[i];
+        const aiMaterial* pMaterial = pScene->mMaterials[i];
 
         m_textures[i] = nullptr;
 
@@ -149,7 +165,8 @@ void ObjectInstanced::LoadMaterials(const aiScene *xpScene, const std::string &f
         {
             aiString path;
 
-            if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path, nullptr, nullptr, nullptr, nullptr, nullptr) == AI_SUCCESS)
+            if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path, nullptr, nullptr, nullptr, nullptr, nullptr) ==
+                AI_SUCCESS)
             {
                 auto fullPath = filePath / path.data;
                 m_textures[i] = new Texture(GL_TEXTURE_2D, fullPath);
@@ -178,7 +195,8 @@ void ObjectInstanced::PopulateBuffers() const
 
     // Texture Coords
     glBindBuffer(GL_ARRAY_BUFFER, m_buffers[TEXTURE_COORDS_VB]);
-    glBufferData(GL_ARRAY_BUFFER, m_textureCoords.size() * sizeof(m_textureCoords[0]), m_textureCoords.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, m_textureCoords.size() * sizeof(m_textureCoords[0]), m_textureCoords.data(),
+                 GL_STATIC_DRAW);
     glEnableVertexAttribArray(TEXTURE_COORD_LOCATION);
     glVertexAttribPointer(TEXTURE_COORD_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
@@ -188,9 +206,16 @@ void ObjectInstanced::PopulateBuffers() const
     glEnableVertexAttribArray(NORMAL_LOCATION);
     glVertexAttribPointer(NORMAL_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
+    // Instanced positions
+    glBindBuffer(GL_ARRAY_BUFFER, m_buffers[INSTANCED_POSITIONS]);
+    //Data to be provided later
+    glEnableVertexAttribArray(INSTANCED_LOCATIONS);
+    glVertexAttribPointer(INSTANCED_LOCATIONS, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3),
+                         nullptr);
+    glVertexAttribDivisor(INSTANCED_LOCATIONS, 1);
 }
 
-void ObjectInstanced::checkOpenGLError(const std::string &location)
+void ObjectInstanced::checkOpenGLError(const std::string& location)
 {
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR)
@@ -223,6 +248,7 @@ void ObjectInstanced::checkOpenGLError(const std::string &location)
             errorStr = "UNKNOWN_ERROR";
             break;
         }
-        std::cerr << "OpenGL Error at " << location << ": " << errorStr << " (0x" << std::hex << err << ")" << std::endl;
+        std::cerr << "OpenGL Error at " << location << ": " << errorStr << " (0x" << std::hex << err << ")" <<
+            std::endl;
     }
 }

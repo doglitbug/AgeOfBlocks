@@ -1,23 +1,21 @@
 #pragma once
 
 #include <format>
-#include <map>
 #include <glad/glad.h>
-#include <glm/glm.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 
 #include <string>
-#include <SDL3/SDL_log.h>
 
-#include "Texture.h"
+#include "../Texture.h"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
 
 // These need to be mirrored in the shader
 #define POSITION_LOCATION       0
 #define TEXTURE_COORD_LOCATION  1
 #define NORMAL_LOCATION         2
-#define BONE_ID_LOCATION        3
-#define BONE_WEIGHT_LOCATION    4
+#define INSTANCED_LOCATIONS     3
 
 #define COLOR_TEXTURE_UNIT GL_TEXTURE0 //?
 
@@ -25,38 +23,26 @@
 #define ARRAY_SIZE(a) (sizeof(a[0]) * a.size())
 #define ASSIMP_LOAD_FLAGS (aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices)
 
-// TODO Move to utilities file
-inline glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
-    glm::mat4 to;
-    // Assimp is row-major (a, b, c, d are rows; 1, 2, 3, 4 are columns)
-    // GLM is column-major (to[col][row])
-    to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
-    to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
-    to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
-    to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
-    return to;
-}
-
-enum BUFFER_TYPE
-{
-    INDEX_BUFFER = 0,
-    POSITION_VB = 1,
-    TEXTURE_COORDS_VB = 2,
-    NORMAL_VB = 3,
-    INSTANCED_POSITIONS = 4,
-    NUMBER_BUFFERS = 5
-};
+class StaticObject;
 
 class ObjectInstanced
 {
 public:
-    ObjectInstanced();
+    enum BUFFER_TYPE
+    {
+        INDEX_BUFFER = 0,
+        POSITION_VB = 1,
+        TEXTURE_COORDS_VB = 2,
+        NORMAL_VB = 3,
+        INSTANCED_POSITIONS = 4,
+        NUMBER_BUFFERS = 5
+    };
+    ObjectInstanced() = default;
     ~ObjectInstanced() = default;
 
     bool LoadMesh(const std::string &filename);
+    void loadData(const std::vector<glm::vec3> &p_objects);
     void Render(unsigned int meshIndex) const;
-
-    float m_scale = 1.0f;
 
 private:
     struct InternalMesh
@@ -74,16 +60,11 @@ private:
         unsigned int materialIndex;
     };
 
-
-
-
     void LoadFromFile(const aiScene *pScene, const std::string &filename);
     void CountVerticesAndIndices(const aiScene *pScene, unsigned int &numberVertices, unsigned int &numberIndices);
     void ReserveSpace(unsigned int numberVertices, unsigned int numberIndices);
 
     void LoadMesh(uint meshIndex, const aiMesh *paiMesh);
-
-    void ReadNodeHierarchy(float animationTimeTicks, const aiNode* pNode, const glm::mat4 &parentTransform);
 
     void LoadMaterials(const aiScene *xpScene, const std::string &filename);
     void PopulateBuffers() const;
@@ -97,6 +78,7 @@ private:
     std::vector<glm::vec2> m_textureCoords;
     std::vector<glm::vec3> m_normals;
 
+    int m_numberInstances;
 
     Assimp::Importer importer;
     const aiScene* pScene;

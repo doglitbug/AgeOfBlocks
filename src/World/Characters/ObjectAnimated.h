@@ -10,7 +10,8 @@
 #include <string>
 #include <SDL3/SDL_log.h>
 
-#include "Texture.h"
+#include "Utils.h"
+#include "../../Texture.h"
 
 // These need to be mirrored in the shader
 #define POSITION_LOCATION       0
@@ -25,31 +26,19 @@
 #define ARRAY_SIZE(a) (sizeof(a[0]) * a.size())
 #define ASSIMP_LOAD_FLAGS (aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices)
 
-// TODO Move to utilities file
-inline glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
-    glm::mat4 to;
-    // Assimp is row-major (a, b, c, d are rows; 1, 2, 3, 4 are columns)
-    // GLM is column-major (to[col][row])
-    to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
-    to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
-    to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
-    to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
-    return to;
-}
-
-enum BUFFER_TYPE
-{
-    INDEX_BUFFER = 0,
-    POSITION_VB = 1,
-    TEXTURE_COORDS_VB = 2,
-    NORMAL_VB = 3,
-    BONE_VB = 4,
-    NUMBER_BUFFERS = 5
-};
-
 class ObjectAnimated
 {
 public:
+    enum BUFFER_TYPE
+    {
+        INDEX_BUFFER = 0,
+        POSITION_VB = 1,
+        TEXTURE_COORDS_VB = 2,
+        NORMAL_VB = 3,
+        BONE_VB = 4,
+        NUMBER_BUFFERS = 5
+    };
+
     ObjectAnimated();
     ~ObjectAnimated() = default;
 

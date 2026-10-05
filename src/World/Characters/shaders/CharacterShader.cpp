@@ -9,14 +9,14 @@ void CharacterShader::init()
     BaseShader::init();
 
     std::string vs, fs;
-    if (!Utils::readFileToString("src/World/shaders/vertex.glsl", vs))
+    if (!Utils::readFileToString("src/World/Characters/shaders/vertex.glsl", vs))
     {
         exit(1);
     };
 
     addShader(GL_VERTEX_SHADER, vs.c_str());
 
-    if (!Utils::readFileToString("src/World/shaders/fragment.glsl", fs))
+    if (!Utils::readFileToString("src/World/Characters/shaders/fragment.glsl", fs))
     {
         exit(1);
     };

@@ -11,8 +11,16 @@ map::map(const int size)
     m_textureArray = {};
     loadTextures();
     m_terrainShaderProgram.init();
+    m_TreeShader.init();
+    m_treesInstance.LoadMesh("assets/models/terrain/SM_Generic_Tree_02.gltf");
     glGenVertexArrays(1, &m_VAO);
     generateMap();
+    std::vector<glm::vec3> treePositions;
+    for (auto tree : m_trees)
+    {
+        treePositions.emplace_back(tree.position);
+    };
+    m_treesInstance.loadData(treePositions);
     CreateTerrainMapTexture();
     CreateHeightMapTexture();
 }
@@ -57,6 +65,14 @@ void map::render()
     // Clean up
     glBindVertexArray(0);
     glUseProgram(0);
+
+
+    m_TreeShader.enable();
+    //Draw trees
+
+    m_treesInstance.Render(0);
+
+    //Draw buildings
 }
 
 void map::generateMap()
@@ -140,8 +156,11 @@ bool map::isWalkable(float x, float z) const
 
     if (gridX < 0 || gridX > m_size || gridZ < 0 || gridZ > m_size) return false;
     if (m_grid[gridZ * m_size + gridX].terrain == DeepWater) return false;
+    // TODO some entities can be walked over eg farms
+    if (m_grid[gridZ * m_size + gridX].entityID != 0) return false;
 
-    //TODO Check static object array
+
+    //TODO Check static object array, eg buildings?
 
     return true;
 }
