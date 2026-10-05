@@ -34,9 +34,6 @@ void PlayState::onEnter()
     m_playerObject.LoadMesh("assets/models/villager.gltf");
     m_playerObject.m_position = glm::vec3(5.0f, 0.0f, 5.0f);
 
-    m_tree.LoadMesh("assets/models/terrain/SM_Generic_Tree_02.gltf");
-    m_tree.m_position = glm::vec3(2.0f, 2.0f, 2.0f);
-
     // Only look this up once and save!
     gModelLocation = m_3dShaderProgram.getUniformLocation("model");
     // Texture Sampler
@@ -72,15 +69,6 @@ void PlayState::update(float deltaTime)
     mCamera->move(App::get()->getInput()->getMovement() * deltaTime * 10.0f);
     // TODO Mouse movement would need to rotate the player object too.
     mCamera->mouseLook(App::get()->getInput()->getMouseMovement() * deltaTime);
-
-    if (App::get()->getInput()->getKeyDown(SDL_SCANCODE_X) && m_meshNumber < 21)
-    {
-        m_meshNumber++;
-    }
-    if (App::get()->getInput()->getKeyDown(SDL_SCANCODE_Z) && m_meshNumber > 0)
-    {
-        m_meshNumber--;
-    }
 
     //Hack for player height
     mCamera->m_position.y = m_map->getHeight(mCamera->m_position.x, mCamera->m_position.z)+1.8f;
@@ -162,11 +150,7 @@ void PlayState::RenderScene()
         //TODO Split up the shader program and use polymorphism
         m_3dShaderProgram.SetBoneTransform(i, transforms[i]);
     }
-    m_playerObject.Render(m_meshNumber);
-
-    glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_tree.GetWorldMatrix()));
-    m_tree.Render(0);
-
+    m_playerObject.Render(0);
 
     // Draw the world
     m_map->render();

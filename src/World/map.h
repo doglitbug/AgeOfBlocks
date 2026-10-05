@@ -12,7 +12,7 @@
 #define CHUNK_SIZE 32
 
 // Scale grid size, in case 1 unit is too small
-#define GRID_SIZE 2.0f
+#define GRID_SIZE 1.0f
 
 #define t00 glm::vec2(0.0f, 0.0f) // Bottom left
 #define t01 glm::vec2(0.0f, 1.0f) // Top left

@@ -78,7 +78,7 @@ void map::render()
 void map::generateMap()
 {
     int entityID = 0;
-    constexpr siv::PerlinNoise::seed_type seed = 123456u;
+    constexpr siv::PerlinNoise::seed_type seed = 8008135u;
     const siv::PerlinNoise perlin{seed};
 
     std::random_device rd;
@@ -104,9 +104,8 @@ void map::generateMap()
 
             if (treeHeight == 0.0f)
             {
-                m_trees.emplace_back(++entityID, glm::vec3(x, height, z), TREE, 100);
+                m_trees.emplace_back(++entityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2), TREE, 100);
                 newEntityID = entityID;
-                terrain = Sand;
             }
 
             m_grid[z * m_size + x] = Tile(terrain, height, newEntityID);

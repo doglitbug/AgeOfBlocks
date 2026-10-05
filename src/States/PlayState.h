@@ -17,9 +17,6 @@ public:
 
     void onNotify(const std::string &message, MyType newValue) override;
 
-    //TODO Private this
-    int m_meshNumber = 0;
-
 private:
     Camera* mCamera = nullptr;
     void toggleMouseLock();
@@ -36,7 +33,6 @@ private:
     void RenderScene();
 
     ObjectAnimated m_playerObject;
-    ObjectAnimated m_tree;
 
     map *m_map;
 
@@ -57,7 +53,4 @@ private:
         glm::vec3 lightColor;
         float _pad2;
     } mLightingStruct;
-
-    const float DAY_DURATION_SECONDS = 10.0f;
-    float timeOfDay = 0.45f;
 };
