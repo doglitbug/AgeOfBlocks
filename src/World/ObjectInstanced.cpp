@@ -170,6 +170,7 @@ void ObjectInstanced::LoadMaterials(const aiScene* xpScene, const std::string& f
             {
                 auto fullPath = filePath / path.data;
                 m_textures[i] = new Texture(GL_TEXTURE_2D, fullPath);
+                SDL_Log("Loading texture at %s", fullPath.c_str());
                 if (!m_textures[i]->Load())
                 {
                     std::cerr << "Unable to load texture at " << fullPath << std::endl;

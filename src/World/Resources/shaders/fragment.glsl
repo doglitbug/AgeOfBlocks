@@ -23,6 +23,11 @@ void main()
 
     vec4 texColor = texture(gSampler, TextureCoord);
 
+    // Discard the transparent grey background pixels entirely
+    if(texColor.a < 0.1) {
+        discard;
+    }
+
     vec3 ambient = ambientColor * texColor.rgb;
 
     float diff = max(dot(norm, negLightDirection), 0.0);

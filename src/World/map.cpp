@@ -12,7 +12,8 @@ map::map(const int size)
     loadTextures();
     m_terrainShaderProgram.init();
     m_TreeShader.init();
-    m_treesInstance.LoadMesh("assets/models/terrain/SM_Generic_Tree_02.gltf");
+    //m_treesInstance.LoadMesh("assets/models/terrain/SM_Generic_Tree_02.gltf");
+    m_treesInstance.LoadMesh("assets/models/terrain/SM_Prop_Plant_Strawberry_01.gltf");
     glGenVertexArrays(1, &m_VAO);
     generateMap();
     std::vector<glm::vec3> treePositions;
@@ -66,11 +67,10 @@ void map::render()
     glBindVertexArray(0);
     glUseProgram(0);
 
-
-    m_TreeShader.enable();
     //Draw trees
-
+    m_TreeShader.enable();
     m_treesInstance.Render(0);
+    m_treesInstance.Render(1);
 
     //Draw buildings
 }
@@ -94,19 +94,23 @@ void map::generateMap()
             TerrainType terrain = Grass;
             int newEntityID = 0;
 
+            //Height
             const auto height = std::max(
                 static_cast<float>(perlin.octave2D_01((x * 0.05), (z * 0.05), 2) * 6.0f - 1.75f),
                 0.0f);
 
-            //int random_num = distrib(gen);
-            const auto treeHeight = std::max(static_cast<float>(perlin.octave2D_01((x * 0.15), (z * 0.15), 4) - 0.4f),
-                                             0.0f);
+            //Sand
+            if (height < 0.5f) terrain = Sand;
 
-            if (treeHeight == 0.0f)
+            //Place trees
+            const auto treeChance = static_cast<float>(perlin.octave2D_01((x * 0.15), (z * 0.15), 4));
+            if (treeChance < 0.3)
             {
                 m_trees.emplace_back(++entityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2), TREE, 100);
                 newEntityID = entityID;
             }
+
+            //Place Stone
 
             m_grid[z * m_size + x] = Tile(terrain, height, newEntityID);
         }

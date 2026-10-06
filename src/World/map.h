@@ -41,7 +41,7 @@ public:
     struct StaticObject
     {
         uint32_t entityID;
-        glm::vec3 position; // Here so no padding required
+        glm::vec3 position;
         StaticObjectType type;
         int health;
     };

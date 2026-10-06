@@ -25,7 +25,7 @@ public:
     {
         std::erase(observers, observer);
     };
-    virtual void notifyObservers(const std::string &message, const MyType newValue)
+    virtual void notifyObservers(const std::string &message, const MyType &newValue)
     {
         for (IObserver *observer : observers)
         {
