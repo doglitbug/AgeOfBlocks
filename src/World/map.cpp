@@ -69,8 +69,7 @@ void map::render()
 
     //Draw trees
     m_TreeShader.enable();
-    m_treesInstance.Render(0);
-    m_treesInstance.Render(1);
+    m_treesInstance.Render();
 
     //Draw buildings
 }

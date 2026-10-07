@@ -42,7 +42,7 @@ public:
 
     bool LoadMesh(const std::string &filename);
     void loadData(const std::vector<glm::vec3> &p_objects);
-    void Render(unsigned int meshIndex) const;
+    void Render(unsigned int meshIndex =-1) const;
 
 private:
     struct InternalMesh
@@ -59,6 +59,8 @@ private:
         unsigned int startingIndex;
         unsigned int materialIndex;
     };
+
+    void RenderMesh(const InternalMesh &mesh) const;
 
     void LoadFromFile(const aiScene *pScene, const std::string &filename);
     void CountVerticesAndIndices(const aiScene *pScene, unsigned int &numberVertices, unsigned int &numberIndices);

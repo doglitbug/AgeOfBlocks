@@ -20,7 +20,10 @@ bool Texture::Load()
     stbi_set_flip_vertically_on_load(1);
     int width = 0, height = 0, bpp = 0;
 
-    unsigned char *image_data = stbi_load(m_fileName.c_str(), &width, &height, &bpp, 0);
+    // 1. CRITICAL: Force stbi to give you 4 channels (RGBA) or 3 channels (RGB)
+    // to match exactly what you pass to OpenGL. Let's use 4 channels (RGBA)
+    // since leaves usually require transparency.
+    unsigned char *image_data = stbi_load(m_fileName.c_str(), &width, &height, &bpp, 4);
 
     if (!image_data)
     {
@@ -31,12 +34,21 @@ bool Texture::Load()
     glGenTextures(1, &m_textureObject);
     glBindTexture(m_textureTarget, m_textureObject);
 
-    glTexImage2D(m_textureTarget, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+    // 2. CRITICAL: Change unpack alignment to 1 byte.
+    // This tells OpenGL to read pixels continuously without forcing a 4-byte padding row stride.
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    glTexParameterf(m_textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(m_textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(m_textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(m_textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // 3. CRITICAL: Match internal format and format to GL_RGBA since we forced 4 channels above
+    glTexImage2D(m_textureTarget, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+
+    // 4. OPTIONAL BUT HIGHLY RECOMMENDED: Generate mipmaps to remove distance aliasing/moiré
+    glGenerateMipmap(m_textureTarget);
+    glTexParameteri(m_textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(m_textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Note: Converted to glTexParameteri since filter/wrap params are integer enums
+    glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glBindTexture(m_textureTarget, 0);
 

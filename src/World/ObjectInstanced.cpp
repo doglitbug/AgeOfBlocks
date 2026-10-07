@@ -52,29 +52,37 @@ void ObjectInstanced::loadData(const std::vector<glm::vec3>& p_objects)
 
 void ObjectInstanced::Render(const unsigned int meshIndex) const
 {
-    // TODO If meshIndex = -1, render all?
     glBindVertexArray(m_VAO);
 
-    const unsigned int i = meshIndex;
-    const unsigned int materialIndex = m_meshes[i].materialIndex;
+    if (meshIndex == -1)
+    {
+        for (auto mesh : m_meshes)
+        {
+            RenderMesh(mesh);
+        }
+    }
+    else
+    {
+        RenderMesh(m_meshes[meshIndex]);
+    }
+
+    glBindVertexArray(0);
+}
+
+void ObjectInstanced::RenderMesh(const InternalMesh& mesh) const
+{
+    const unsigned int materialIndex = mesh.materialIndex;
     if (materialIndex < m_textures.size())
     {
         m_textures[materialIndex]->Bind(COLOR_TEXTURE_UNIT);
     }
-    // glDrawElementsBaseVertex(GL_TRIANGLES,
-    //                          m_meshes[i].numberIndices,
-    //                          GL_UNSIGNED_INT,
-    //                          (void*)(sizeof(unsigned int) * m_meshes[i].startingIndex),
-    //                          m_meshes[i].startingVertex);
 
     glDrawElementsInstancedBaseVertex(GL_TRIANGLES,
-                                      m_meshes[i].numberIndices,
+                                      mesh.numberIndices,
                                       GL_UNSIGNED_INT,
-                                      (void*)(sizeof(unsigned int) * m_meshes[i].startingIndex),
+                                      (void*)(sizeof(unsigned int) * mesh.startingIndex),
                                       m_numberInstances,
-                                      m_meshes[i].startingVertex);
-
-    glBindVertexArray(0);
+                                      mesh.startingVertex);
 }
 
 void ObjectInstanced::LoadFromFile(const aiScene* pScene, const std::string& filename)
@@ -212,7 +220,7 @@ void ObjectInstanced::PopulateBuffers() const
     //Data to be provided later
     glEnableVertexAttribArray(INSTANCED_LOCATIONS);
     glVertexAttribPointer(INSTANCED_LOCATIONS, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3),
-                         nullptr);
+                          nullptr);
     glVertexAttribDivisor(INSTANCED_LOCATIONS, 1);
 }
 
