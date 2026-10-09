@@ -67,14 +67,14 @@ void BaseShader::finalize()
         exit(1);
     }
 
-    glValidateProgram(m_shaderProgram);
-    glGetProgramiv(m_shaderProgram, GL_VALIDATE_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(m_shaderProgram, sizeof(errorLog), nullptr, errorLog);
-        SDL_Log("Invalid shader program: '%s'\n", errorLog);
-        exit(1);
-    }
+    // glValidateProgram(m_shaderProgram);
+    // glGetProgramiv(m_shaderProgram, GL_VALIDATE_STATUS, &success);
+    // if (!success)
+    // {
+    //     glGetProgramInfoLog(m_shaderProgram, sizeof(errorLog), nullptr, errorLog);
+    //     SDL_Log("Invalid shader program: '%s'\n", errorLog);
+    //     exit(1);
+    // }
 
     for (const auto shader : m_shaders)
     {

@@ -103,5 +103,5 @@ private:
     GLuint m_VAO;
     GLuint heightTextureID;
     GLuint terrainTextureID;
-    bool m_showGrid = true;
+    bool m_showGrid = false;
 };
