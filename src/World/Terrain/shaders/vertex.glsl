@@ -7,6 +7,7 @@ layout (std140) uniform viewUniform {
 
 out vec2 TextureCoord;
 out vec2 GridCoords;
+out vec2 FragPos;
 
 uniform int mapSize;
 uniform sampler2D heightMap;
@@ -45,4 +46,5 @@ void main() {
     // 6. Forward UV maps to the fragment shader
     TextureCoord = localPos;
     GridCoords = worldPos2D / mapDimensions;
+    FragPos = worldPos2D;
 }

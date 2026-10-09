@@ -55,7 +55,22 @@ Step 3 ???
 Change Synty Armature from X rotation 90 to 180 (?)
 In Rokoko select rest and click retarget. Should be aligned correctly.
 
+
+Fbx->Blender->Game
+Ctrl+A ->Scale (Fixes stuff being massive in size)  Will need to reapply this if manually scaling objects as well
+Ctrl+A -> Rotation (fixes that sideways issue!)
+
+
 ## Credits
 ### Terrain textures
 
 Perlin noise generation: https://github.com/Reputeless/PerlinNoise
+Synty:
+- Farm Pack
+- Jungle Biome
+- Fantasy Kingdom
+
+YouTubers:
+- b3agz
+- ogldev
+- piratesoftware

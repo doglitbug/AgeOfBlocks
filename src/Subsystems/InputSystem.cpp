@@ -74,26 +74,22 @@ glm::vec2 InputSystem::getMovement() const
 {
     glm::vec2 newVelocity(0.0f, 0.0f);
 
-    if (getKeyDown(App::get()->getSettings()->m_keyboard.RIGHT) || getButtonDown(
-        App::get()->getSettings()->m_gamepad.RIGHT))
+    if (getAction(actions::FORWARD))
     {
-        newVelocity.x = 1.0f;
+        newVelocity.y = 1.0f;
     }
-    else if (getKeyDown(App::get()->getSettings()->m_keyboard.LEFT) || getButtonDown(
-        App::get()->getSettings()->m_gamepad.LEFT))
-    {
-        newVelocity.x = -1.0f;
-    }
-
-    if (getKeyDown(App::get()->getSettings()->m_keyboard.DOWN) || getButtonDown(
-        App::get()->getSettings()->m_gamepad.DOWN))
+    else if (getAction(actions::BACKWARD))
     {
         newVelocity.y = -1.0f;
     }
-    else if (getKeyDown(App::get()->getSettings()->m_keyboard.UP) || getButtonDown(
-        App::get()->getSettings()->m_gamepad.UP))
+
+    if (getAction(actions::STRAFE_LEFT))
     {
-        newVelocity.y = 1.0f;
+        newVelocity.x = -1.0f;
+    }
+    else if (getAction(actions::STRAFE_RIGHT))
+    {
+        newVelocity.x = 1.0f;
     }
 
     if (glm::length(newVelocity) != 0)
@@ -111,25 +107,10 @@ glm::vec2 InputSystem::getMouseMovement() const
 
 bool InputSystem::getAction(const actions action) const
 {
-    switch (action)
-    {
-    case actions::MENU:
-        return getKeyDown(App::get()->getSettings()->m_keyboard.MENU) || getButtonDown(
-            App::get()->getSettings()->m_gamepad.MENU);
-    case actions::ATTACK:
-        return getKeyDown(App::get()->getSettings()->m_keyboard.ATTACK) || getButtonDown(
-            App::get()->getSettings()->m_gamepad.ATTACK);
-    case actions::SECONDARY_ATTACK:
-        return getKeyDown(App::get()->getSettings()->m_keyboard.SECONDARY_ATTACK) || getButtonDown(
-            App::get()->getSettings()->m_gamepad.SECONDARY_ATTACK);
-    case actions::CONFIRM:
-        return getKeyDown(App::get()->getSettings()->m_keyboard.CONFIRM) || getButtonDown(
-            App::get()->getSettings()->m_gamepad.CONFIRM);
-    case actions::CANCEL:
-        return getKeyDown(App::get()->getSettings()->m_keyboard.CANCEL) || getButtonDown(
-            App::get()->getSettings()->m_gamepad.CANCEL);
-    }
-    return false;
+    const auto& keyboard = App::get()->getSettings()->m_keyboard;
+    const auto& gamepad  = App::get()->getSettings()->m_gamepad;
+
+    return getKeyDown(keyboard.get(action)) || getButtonDown(gamepad.get(action));
 }
 
 bool InputSystem::getButtonDown(const int button) const
@@ -208,12 +189,6 @@ void InputSystem::onButtonChange(const SDL_Event& event)
 void InputSystem::onKeyChange()
 {
     m_keyStates = SDL_GetKeyboardState(nullptr);
-    //TODO Remove this test code
-
-    if (getKeyDown(SDL_SCANCODE_Q))
-    {
-        App::get()->quit();
-    }
 }
 
 void InputSystem::onMouseMove(const SDL_Event& event)

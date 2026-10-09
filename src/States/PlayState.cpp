@@ -62,7 +62,7 @@ void PlayState::onEnter()
 void PlayState::update(float deltaTime)
 {
     m_playerObject.m_rotation.y += deltaTime * 50;
-    //TODO Wrap around, possibly add to a object.update(deltaTime)
+    //TODO Wrap around, add to a object.update(deltaTime)
     m_playerObject.m_animationTime += deltaTime;
 
     // Do Camera movement, later on this will be moving a player object that the camera is attached to
@@ -72,6 +72,14 @@ void PlayState::update(float deltaTime)
 
     //Hack for player height
     mCamera->m_position.y = m_map->getHeight(mCamera->m_position.x, mCamera->m_position.z)+1.8f;
+
+    if (App::get()->getInput()->getAction(actions::MENU))
+    {
+        //TODO Save game request etc
+        App::get()->quit();
+    }
+
+    m_map->update(deltaTime);
 }
 
 void PlayState::render()
@@ -89,7 +97,7 @@ void PlayState::onExit()
 void PlayState::onNotify(const std::string& message, const MyType newValue)
 {
     if (message == "RESOLUTION"){
-        auto resolution = std::get<glm::ivec2>(newValue);
+        const auto resolution = std::get<glm::ivec2>(newValue);
         mCamera->setPerspective(45.0f, resolution.x, resolution.y, 0.1f, 1000.0f);
     }
 }

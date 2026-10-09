@@ -4,6 +4,9 @@
 
 #include <cmath>
 #include <random>
+#include <SDL3/SDL_scancode.h>
+
+#include "Subsystems/App.h"
 
 map::map(const int size)
 {
@@ -12,8 +15,9 @@ map::map(const int size)
     loadTextures();
     m_terrainShaderProgram.init();
     m_TreeShader.init();
-    //m_treesInstance.LoadMesh("assets/models/terrain/SM_Generic_Tree_02.gltf");
-    m_treesInstance.LoadMesh("assets/models/terrain/SM_Prop_Plant_Strawberry_01.gltf");
+    m_treesInstance.LoadMesh("assets/models/terrain/SM_Generic_Tree_02.gltf");
+    //m_treesInstance.LoadMesh("assets/models/terrain/SM_Prop_Plant_Bush_03_Chilli.gltf");
+    //m_treesInstance.LoadMesh("assets/models/terrain/SM_Prop_Plant_Strawberry_01.gltf");
     glGenVertexArrays(1, &m_VAO);
     generateMap();
     std::vector<glm::vec3> treePositions;
@@ -24,6 +28,14 @@ map::map(const int size)
     m_treesInstance.loadData(treePositions);
     CreateTerrainMapTexture();
     CreateHeightMapTexture();
+}
+
+void map::update(float deltaTime)
+{
+    if (App::get()->getInput()->getAction(actions::TOGGLE_GRID))
+    {
+        m_showGrid = !m_showGrid;
+    }
 }
 
 void map::loadTextures()
@@ -59,6 +71,10 @@ void map::render()
     // Slot 2: texture array
     m_textureArray->Bind(GL_TEXTURE2);
     glUniform1i(m_terrainShaderProgram.getUniformLocation("textureArray"), 2);
+
+    // Show grid TODO Move this to update so it isnt uploaded every frame?
+    glUniform1i(m_terrainShaderProgram.getUniformLocation("showGrid"), m_showGrid);
+
     // Draw
     glBindVertexArray(m_VAO);
     glDrawArraysInstanced(GL_TRIANGLES, 0, 6, m_size * m_size);
@@ -105,7 +121,7 @@ void map::generateMap()
             const auto treeChance = static_cast<float>(perlin.octave2D_01((x * 0.15), (z * 0.15), 4));
             if (treeChance < 0.3)
             {
-                m_trees.emplace_back(++entityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2), TREE, 100);
+                m_trees.emplace_back(++entityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2), TREE, 100, GAIA);
                 newEntityID = entityID;
             }
 

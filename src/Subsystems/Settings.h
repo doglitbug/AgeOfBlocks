@@ -17,27 +17,28 @@ struct settings
     std::string language;
 };
 
-/// @brief Input bindings, either keyboard or gamepad
-/// Idea is that we can ask if m_keyboard.ATTACK or m_gamepad.ATTACK has been pushed to know if we need to attack!
-struct bindings
-{
-    int UP;
-    int DOWN;
-    int LEFT;
-    int RIGHT;
-    int MENU;
-    int ATTACK;
-    int SECONDARY_ATTACK;
-    int CONFIRM;
-    int CANCEL;
+enum class actions {
+    FORWARD,
+    BACKWARD,
+    STRAFE_LEFT,
+    STRAFE_RIGHT,
+    TURN_LEFT,
+    TURN_RIGHT,
+    MENU,
+    TOGGLE_GRID,
+    COUNT
 };
 
-enum class actions {
-    MENU,
-    ATTACK,
-    SECONDARY_ATTACK,
-    CONFIRM,
-    CANCEL
+struct bindings {
+    int keys[static_cast<size_t>(actions::COUNT)] = {}; // Default initializes all to 0
+
+    int get(actions action) const {
+        return keys[static_cast<size_t>(action)];
+    }
+
+    void set(actions action, const int newKey) {
+        keys[static_cast<size_t>(action)] = newKey;
+    }
 };
 
 class Settings : public ISubject
@@ -85,28 +86,20 @@ public:
 
     // Input
     /// @see https://wiki.libsdl.org/SDL3/SDL_Scancode
+    /// @see
     bindings m_keyboard = {
         SDL_SCANCODE_W,
         SDL_SCANCODE_S,
         SDL_SCANCODE_A,
         SDL_SCANCODE_D,
+        SDL_SCANCODE_Q,
+        SDL_SCANCODE_E,
         SDL_SCANCODE_ESCAPE,
-        SDL_SCANCODE_RETURN,
-        SDL_SCANCODE_SPACE,
-        SDL_SCANCODE_RETURN,
-        SDL_SCANCODE_BACKSPACE};
+        SDL_SCANCODE_G
+    };
 
     /// @see https://wiki.libsdl.org/SDL3/SDL_GamepadButton
-    bindings m_gamepad = {
-        SDL_GAMEPAD_BUTTON_DPAD_UP,
-        SDL_GAMEPAD_BUTTON_DPAD_DOWN,
-        SDL_GAMEPAD_BUTTON_DPAD_LEFT,
-        SDL_GAMEPAD_BUTTON_DPAD_RIGHT,
-        SDL_GAMEPAD_BUTTON_START,
-        SDL_GAMEPAD_BUTTON_SOUTH,
-        SDL_GAMEPAD_BUTTON_EAST,
-        SDL_GAMEPAD_BUTTON_WEST,
-        SDL_GAMEPAD_BUTTON_NORTH};
+    bindings m_gamepad = {};
 private:
     settings m_settings{};
 };

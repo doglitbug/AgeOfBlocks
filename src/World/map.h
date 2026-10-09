@@ -19,6 +19,9 @@
 #define t10 glm::vec2(1.0f, 0.0f) // Bottom right
 #define t11 glm::vec2(1.0f, 1.0f) // Top right
 
+// Player zero is nature
+#define GAIA 0
+
 class map
 {
 public:
@@ -44,6 +47,7 @@ public:
         glm::vec3 position;
         StaticObjectType type;
         int health;
+        int owner;
     };
 
     struct Tile
@@ -57,6 +61,7 @@ public:
 
     //TODO Ensure rows/columns are a multiple of CHUNK_SIZE?
     explicit map(int size = CHUNK_SIZE);
+    void update(float deltaTime);
     void render();
     [[nodiscard]] int getSize() const { return m_size; }
 
@@ -98,4 +103,5 @@ private:
     GLuint m_VAO;
     GLuint heightTextureID;
     GLuint terrainTextureID;
+    bool m_showGrid = true;
 };
