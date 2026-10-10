@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <vector>
 
 #include "ObjectInstanced.h"
@@ -26,27 +27,33 @@
 class map
 {
 public:
+    enum ResourceType
+    {
+        FOOD,
+        WOOD,
+        STONE,
+        GOLD
+    };
+
     enum TerrainType
     {
-        MapEdge = 0,
-        Grass,
-        Rock,
-        Sand,
-        Water,
-        DeepWater,
-        SIZE,
+        GRASS,
+        SAND,
+        SIZE
     };
 
     enum StaticObjectType
     {
-        TREE = 1,
+        TREE,
         BERRY_BUSH,
+        GOLD_ORE,
+        STONE_ORE
     };
 
     struct StaticObject
     {
         uint32_t entityID;
-        glm::vec3 position;
+        glm::vec3 position; //World co-ords
         StaticObjectType type;
         int health;
         int owner;
@@ -55,11 +62,9 @@ public:
     struct Tile
     {
         TerrainType terrain;
-        float height; // height of the bottom left corner
-        uint32_t entityID;
+        float height; // Height of the bottom left corner
+        uint32_t entityID; // Zero if empty
     };
-
-
 
     //TODO Ensure rows/columns are a multiple of CHUNK_SIZE?
     explicit map(int size = CHUNK_SIZE);
@@ -100,8 +105,8 @@ private:
     std::vector<StaticObject> m_trees;
     std::vector<StaticObject> m_berryBushes;
 
-    ObjectInstanced m_treesInstance;
-    ObjectInstanced m_berryBushesInstance;
+    std::map<StaticObjectType,std::vector<StaticObject>> StaticObjects;
+    std::map<StaticObjectType,ObjectInstanced> StaticObjectsInstances;
 
     TextureArray* m_textureArray;
     //TODO Should this just be a pointer?

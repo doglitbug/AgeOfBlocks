@@ -14,24 +14,24 @@ map::map(const int size)
     loadTextures();
     m_terrainShaderProgram.init();
     m_TreeShader.init();
-    m_treesInstance.LoadMesh("assets/models/terrain/SM_Generic_Tree_02.gltf");
-    //m_berryBushesInstance.LoadMesh("assets/models/terrain/SM_Prop_Plant_Strawberry_01.gltf");
-    m_berryBushesInstance.LoadMesh("assets/models/terrain/SM_Prop_Plant_Bush_03_Chilli.gltf");
+
+    StaticObjectsInstances[TREE].LoadMesh("assets/models/terrain/SM_Generic_Tree_02.gltf");
+    StaticObjectsInstances[BERRY_BUSH].LoadMesh("assets/models/terrain/SM_Prop_Plant_Bush_03_Chilli.gltf");
+    StaticObjectsInstances[GOLD_ORE].LoadMesh("assets/models/terrain/SM_Prop_Ore_Gold_01.gltf");
+    StaticObjectsInstances[STONE_ORE].LoadMesh("assets/models/terrain/SM_Prop_Ore_Iron_01.gltf");
+
     glGenVertexArrays(1, &m_VAO);
     generateMap();
-    std::vector<glm::vec3> treePositions;
-    for (auto tree : m_trees)
-    {
-        treePositions.emplace_back(tree.position);
-    };
-    m_treesInstance.loadData(treePositions);
 
-    std::vector<glm::vec3> berryPositions;
-    for (auto berry : m_berryBushes)
+    for (auto& [type, objects] : StaticObjects)
     {
-        berryPositions.emplace_back(berry.position);
+        std::vector<glm::vec3> positions;
+        for (auto& object : objects)
+        {
+            positions.emplace_back(object.position);
+        }
+        StaticObjectsInstances[type].loadData(positions);
     }
-    m_berryBushesInstance.loadData(berryPositions);
 
     CreateTerrainMapTexture();
     CreateHeightMapTexture();
@@ -49,10 +49,8 @@ void map::loadTextures()
 {
     const auto terrainPath = "assets/terrain/";
     const std::vector<std::string> filenames = {
-        "RockWall_Texture_01.png",
         "Grass_Clovers_Texture_01.png",
-        "Rock_Texture_01.png",
-        "Sand_Texture_01.png"
+        "Sand_Texture_01.png",
     };
 
     m_textureArray = new TextureArray(terrainPath, filenames);
@@ -65,20 +63,42 @@ uint32_t map::generateStatic(float x, float z, float height)
     const auto treeChance = static_cast<float>(perlin.octave2D_01(x * 0.15, z * 0.15, 4));
     if (treeChance < 0.25)
     {
-        m_trees.emplace_back(++nextEntityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2), TREE, 100, GAIA);
+        StaticObjects[TREE].emplace_back(++nextEntityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2),
+                                         TREE,
+                                         100,
+                                         GAIA);
+        return nextEntityID;
+    }
+
+    //Place Gold/Stone
+    const auto goldChance = static_cast<float>(perlin.octave2D_01((x * 0.2f), (z * 0.2f), 4));
+    if (goldChance < 0.15)
+    {
+        StaticObjects[GOLD_ORE].emplace_back(++nextEntityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2),
+                                             GOLD_ORE,
+                                             0,
+                                             GAIA);
+        return nextEntityID;
+    }
+    if (goldChance > 0.80f)
+    {
+        StaticObjects[STONE_ORE].emplace_back(++nextEntityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2),
+                                              STONE_ORE,
+                                              0,
+                                              GAIA);
         return nextEntityID;
     }
 
     //Place Berries
     const auto berryChance = static_cast<float>(perlin.octave2D_01((x * 0.30), (z * 0.15), 4));
-    if (berryChance < 0.15)
+    if (berryChance < 0.2)
     {
-        m_berryBushes.emplace_back(++nextEntityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2),
-                                   BERRY_BUSH, 100,
-                                   GAIA);
+        StaticObjects[BERRY_BUSH].emplace_back(++nextEntityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2),
+                                               BERRY_BUSH,
+                                               0,
+                                               GAIA);
         return nextEntityID;
     }
-
 
     return 0;
 }
@@ -115,11 +135,11 @@ void map::render()
     glUseProgram(0);
 
     m_TreeShader.enable();
-    //Draw trees
-    m_treesInstance.Render();
 
-    //Draw berry bushes
-    m_berryBushesInstance.Render();
+    for (auto& [type, instance] : StaticObjectsInstances)
+    {
+        instance.Render();
+    }
 }
 
 void map::generateMap()
@@ -137,7 +157,7 @@ void map::generateMap()
     {
         for (int x = 0; x < m_size; ++x)
         {
-            TerrainType terrain = Grass;
+            TerrainType terrain = GRASS;
 
             //Height
             auto height =
@@ -146,7 +166,7 @@ void map::generateMap()
             if (height > 1.5f) height = 1.5f;
 
             //Sand
-            if (height < 0.5f) terrain = Sand;
+            if (height < 0.25f) terrain = SAND;
 
             //Place objects
             const uint32_t staticObject = generateStatic(x, z, height);
@@ -155,7 +175,6 @@ void map::generateMap()
         }
     }
 }
-
 
 float map::getHeight(const float x, const float z) const
 {
@@ -198,12 +217,12 @@ bool map::isWalkable(float x, float z) const
     int gridZ = static_cast<int>(std::floor(z));
 
     if (gridX < 0 || gridX > m_size || gridZ < 0 || gridZ > m_size) return false;
-    if (m_grid[gridZ * m_size + gridX].terrain == DeepWater) return false;
+    //if (m_grid[gridZ * m_size + gridX].terrain == DeepWater) return false;
     // TODO some entities can be walked over eg farms
     if (m_grid[gridZ * m_size + gridX].entityID != 0) return false;
 
+    //TODO Check static object array, eg buildings
 
-    //TODO Check static object array, eg buildings?
 
     return true;
 }
