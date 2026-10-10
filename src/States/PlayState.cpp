@@ -40,7 +40,8 @@ void PlayState::onEnter()
     gSamplerLocation = m_3dShaderProgram.getUniformLocation("gSampler");
 
     auto start = std::chrono::steady_clock::now();
-    m_map = new map(64);
+    //TODO Chunking...10k size is too much for beast machine to display!
+    m_map = new map(512);
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 

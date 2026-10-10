@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "ObjectInstanced.h"
+#include "PerlinNoise.h"
 #include "TextureArray.h"
 #include "glm/vec3.hpp"
 #include "Resources/shaders/StaticShader.h"
@@ -38,7 +39,8 @@ public:
 
     enum StaticObjectType
     {
-        TREE = 1
+        TREE = 1,
+        BERRY_BUSH,
     };
 
     struct StaticObject
@@ -88,12 +90,18 @@ public:
 
 private:
     void loadTextures();
+    uint32_t generateStatic(float x, float z, float height);
+    siv::PerlinNoise perlin;
     void CreateTerrainMapTexture();
     void CreateHeightMapTexture();
     int m_size;
     std::vector<Tile> m_grid;
+    uint32_t nextEntityID;
     std::vector<StaticObject> m_trees;
+    std::vector<StaticObject> m_berryBushes;
+
     ObjectInstanced m_treesInstance;
+    ObjectInstanced m_berryBushesInstance;
 
     TextureArray* m_textureArray;
     //TODO Should this just be a pointer?

@@ -4,7 +4,6 @@
 
 #include <cmath>
 #include <random>
-#include <SDL3/SDL_scancode.h>
 
 #include "Subsystems/App.h"
 
@@ -16,8 +15,8 @@ map::map(const int size)
     m_terrainShaderProgram.init();
     m_TreeShader.init();
     m_treesInstance.LoadMesh("assets/models/terrain/SM_Generic_Tree_02.gltf");
-    //m_treesInstance.LoadMesh("assets/models/terrain/SM_Prop_Plant_Bush_03_Chilli.gltf");
-    //m_treesInstance.LoadMesh("assets/models/terrain/SM_Prop_Plant_Strawberry_01.gltf");
+    //m_berryBushesInstance.LoadMesh("assets/models/terrain/SM_Prop_Plant_Strawberry_01.gltf");
+    m_berryBushesInstance.LoadMesh("assets/models/terrain/SM_Prop_Plant_Bush_03_Chilli.gltf");
     glGenVertexArrays(1, &m_VAO);
     generateMap();
     std::vector<glm::vec3> treePositions;
@@ -26,6 +25,14 @@ map::map(const int size)
         treePositions.emplace_back(tree.position);
     };
     m_treesInstance.loadData(treePositions);
+
+    std::vector<glm::vec3> berryPositions;
+    for (auto berry : m_berryBushes)
+    {
+        berryPositions.emplace_back(berry.position);
+    }
+    m_berryBushesInstance.loadData(berryPositions);
+
     CreateTerrainMapTexture();
     CreateHeightMapTexture();
 }
@@ -50,6 +57,30 @@ void map::loadTextures()
 
     m_textureArray = new TextureArray(terrainPath, filenames);
     m_textureArray->Load();
+}
+
+uint32_t map::generateStatic(float x, float z, float height)
+{
+    //Place trees
+    const auto treeChance = static_cast<float>(perlin.octave2D_01(x * 0.15, z * 0.15, 4));
+    if (treeChance < 0.25)
+    {
+        m_trees.emplace_back(++nextEntityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2), TREE, 100, GAIA);
+        return nextEntityID;
+    }
+
+    //Place Berries
+    const auto berryChance = static_cast<float>(perlin.octave2D_01((x * 0.30), (z * 0.15), 4));
+    if (berryChance < 0.15)
+    {
+        m_berryBushes.emplace_back(++nextEntityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2),
+                                   BERRY_BUSH, 100,
+                                   GAIA);
+        return nextEntityID;
+    }
+
+
+    return 0;
 }
 
 void map::render()
@@ -83,18 +114,18 @@ void map::render()
     glBindVertexArray(0);
     glUseProgram(0);
 
-    //Draw trees
     m_TreeShader.enable();
+    //Draw trees
     m_treesInstance.Render();
 
-    //Draw buildings
+    //Draw berry bushes
+    m_berryBushesInstance.Render();
 }
 
 void map::generateMap()
 {
-    int entityID = 0;
     constexpr siv::PerlinNoise::seed_type seed = 8008135u;
-    const siv::PerlinNoise perlin{seed};
+    perlin = siv::PerlinNoise{seed};
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -107,30 +138,24 @@ void map::generateMap()
         for (int x = 0; x < m_size; ++x)
         {
             TerrainType terrain = Grass;
-            int newEntityID = 0;
 
             //Height
-            const auto height = std::max(
-                static_cast<float>(perlin.octave2D_01((x * 0.05), (z * 0.05), 2) * 6.0f - 1.75f),
-                0.0f);
+            auto height =
+                static_cast<float>(perlin.octave2D_01(x * 0.05, z * 0.05, 2) * 6.0f - 1.75f);
+            if (height < 0.0f) height = 0.0f;
+            if (height > 1.5f) height = 1.5f;
 
             //Sand
             if (height < 0.5f) terrain = Sand;
 
-            //Place trees
-            const auto treeChance = static_cast<float>(perlin.octave2D_01((x * 0.15), (z * 0.15), 4));
-            if (treeChance < 0.3)
-            {
-                m_trees.emplace_back(++entityID, glm::vec3(x + GRID_SIZE / 2, height, z + GRID_SIZE / 2), TREE, 100, GAIA);
-                newEntityID = entityID;
-            }
+            //Place objects
+            const uint32_t staticObject = generateStatic(x, z, height);
 
-            //Place Stone
-
-            m_grid[z * m_size + x] = Tile(terrain, height, newEntityID);
+            m_grid[z * m_size + x] = Tile(terrain, height, staticObject);
         }
     }
 }
+
 
 float map::getHeight(const float x, const float z) const
 {
