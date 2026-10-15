@@ -88,10 +88,8 @@ private:
                     return;
                 }
             }
-
             // should never get here - more bones than we have space for
             //assert(0);
-            SDL_Log("Opps"); // BoneID 33, weight 0 comes here once per villager file load
         }
     };
 

@@ -40,5 +40,11 @@ void main()
     gl_Position =  projection * view  * vec4(FragPos, 1.0);
 
     TextureCoord = aTextureCoord;
-    Normal = normalize(mat3(model) * aNormal);
+
+    // 2. Fix Normals: Transform the normal by the bones first, then the model matrix
+    mat3 boneNormalMatrix = mat3(BoneTransform);
+    vec3 animatedNormal = boneNormalMatrix * aNormal;
+
+    // 3. Move to World Space (Using a CPU-calculated normalMatrix is ideal here if model has non-uniform scaling)
+    Normal = normalize(mat3(model) * animatedNormal);
 }

@@ -47,32 +47,38 @@ void PlayState::onEnter()
 
     // 5. Output the result using .count()
     std::cout << "Time taken by code section: "
-              << duration.count() << " microseconds" << std::endl;
+        << duration.count() << " microseconds" << std::endl;
 
 
     App::get()->getSettings()->addObserver(this);
-    App::get()->setMouseLock(true);
+    App::get()->setMouseLock(false);
 
-    mLightingStruct = {
-        .ambientColor   = glm::vec3(0.18f, 0.24f, 0.35f),
+    m_lightingStruct = {
+        .ambientColor = glm::vec3(0.18f, 0.24f, 0.35f),
         .lightDirection = glm::normalize(glm::vec3(-0.3f, -1.0f, -0.4f)),
-        .lightColor     = glm::vec3(1.0f, 0.98f, 0.85f)
+        .lightColor = glm::vec3(1.0f, 0.98f, 0.85f)
     };
 }
 
 void PlayState::update(float deltaTime)
 {
-    m_playerObject.m_rotation.y += deltaTime * 50;
     //TODO Wrap around, add to a object.update(deltaTime)
     m_playerObject.m_animationTime += deltaTime;
 
     // Do Camera movement, later on this will be moving a player object that the camera is attached to
     mCamera->move(App::get()->getInput()->getMovement() * deltaTime * 10.0f);
-    // TODO Mouse movement would need to rotate the player object too.
-    mCamera->mouseLook(App::get()->getInput()->getMouseMovement() * deltaTime);
+    if (App::get()->getInput()->getMouseButtonState(mouseButtons::LEFT) || App::get()->getInput()->getMouseButtonState(mouseButtons::RIGHT))
+    {
+        App::get()->setMouseLock(true);
+        // TODO Mouse movement would need to rotate the player object too.
+        mCamera->mouseLook(App::get()->getInput()->getMouseMovement() * deltaTime);
+    } else
+    {
+        App::get()->setMouseLock(false);
+    }
 
     //Hack for player height
-    mCamera->m_position.y = m_map->getHeight(mCamera->m_position.x, mCamera->m_position.z)+1.8f;
+    mCamera->m_position.y = m_map->getHeight(mCamera->m_position.x, mCamera->m_position.z) + 1.8f;
 
     if (App::get()->getInput()->getAction(actions::MENU))
     {
@@ -97,7 +103,8 @@ void PlayState::onExit()
 
 void PlayState::onNotify(const std::string& message, const MyType newValue)
 {
-    if (message == "RESOLUTION"){
+    if (message == "RESOLUTION")
+    {
         const auto resolution = std::get<glm::ivec2>(newValue);
         mCamera->setPerspective(45.0f, resolution.x, resolution.y, 0.1f, 1000.0f);
     }
@@ -114,7 +121,8 @@ void PlayState::drawHUD()
     ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f));
     ImGui::Begin("Debug menu");
     //ImGui::Text("Current time of day: %f", timeOfDay);
-    ImGui::Text("Camera position (x,y,z): %f %f %f", mCamera->m_position.x, mCamera->m_position.y, mCamera->m_position.z);
+    ImGui::Text("Camera position (x,y,z): %f %f %f", mCamera->m_position.x, mCamera->m_position.y,
+                mCamera->m_position.z);
     ImGui::Text("Current language: %s", App::get()->getLanguage()->get("LANGUAGE").c_str());
     ImGui::End();
 
@@ -132,22 +140,20 @@ void PlayState::CompileShaders()
 void PlayState::RenderScene()
 {
     // Send the camera stuff to the GPU
-    mViewStruct.view = mCamera->getViewMatrix();
-    mViewStruct.projection = mCamera->getProjectionMatrix();
+    m_viewStruct.view = mCamera->getViewMatrix();
+    m_viewStruct.projection = mCamera->getProjectionMatrix();
 
     glBindBuffer(GL_UNIFORM_BUFFER, ubos[0]);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(viewStruct), &mViewStruct);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(viewStruct), &m_viewStruct);
 
     // Send lighting stuff to the GPU
-
     glBindBuffer(GL_UNIFORM_BUFFER, ubos[1]);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(lightingStruct), &mLightingStruct);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(lightingStruct), &m_lightingStruct);
 
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     m_3dShaderProgram.enable();
     // Send the translation info to the GPU
-    // TODO Move to objects render?
     glUniformMatrix4fv(gModelLocation, 1, GL_FALSE, glm::value_ptr(m_playerObject.GetWorldMatrix()));
 
     std::vector<glm::mat4> transforms;
@@ -159,7 +165,7 @@ void PlayState::RenderScene()
         //TODO Split up the shader program and use polymorphism
         m_3dShaderProgram.SetBoneTransform(i, transforms[i]);
     }
-    m_playerObject.Render(0);
+    m_playerObject.Render(2);
 
     // Draw the world
     m_map->render();

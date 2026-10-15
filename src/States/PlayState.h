@@ -42,7 +42,7 @@ private:
     {
         glm::mat4 view;
         glm::mat4 projection;
-    } mViewStruct;
+    } m_viewStruct;
 
     struct lightingStruct
     {
@@ -52,5 +52,5 @@ private:
         float _pad1;
         glm::vec3 lightColor;
         float _pad2;
-    } mLightingStruct;
+    } m_lightingStruct;
 };
