@@ -9,10 +9,10 @@
 
 void PlayState::onEnter()
 {
-    mCamera = new Camera();
+    m_camera = new Camera();
     // TODO Store fov, near and far as variables?
     const auto resolution = App::get()->getSettings()->getResolution();
-    mCamera->setPerspective(45.0f, resolution.x, resolution.y, 0.1f, 1000.0f);
+    m_camera->setPerspective(45.0f, resolution.x, resolution.y, 0.1f, 1000.0f);
 
     glGenBuffers(2, ubos);
 
@@ -32,7 +32,7 @@ void PlayState::onEnter()
     CompileShaders();
 
     m_playerObject.LoadMesh("assets/models/villager.gltf");
-    m_playerObject.m_position = glm::vec3(5.0f, 0.0f, 5.0f);
+    m_playerObject.m_position = glm::vec3(128.0f, 0.0f, 136.0f);
 
     // Only look this up once and save!
     gModelLocation = m_3dShaderProgram.getUniformLocation("model");
@@ -41,17 +41,16 @@ void PlayState::onEnter()
 
     auto start = std::chrono::steady_clock::now();
     //TODO Chunking...10k size is too much for beast machine to display!
-    m_map = new map(512);
+    m_map = new map(256);
     auto end = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
     // 5. Output the result using .count()
-    std::cout << "Time taken by code section: "
-        << duration.count() << " microseconds" << std::endl;
+    std::cout << "Time taken by map generation section: "
+        << duration.count() / 1000.0f << " seconds" << std::endl;
 
 
     App::get()->getSettings()->addObserver(this);
-    App::get()->setMouseLock(false);
 
     m_lightingStruct = {
         .ambientColor = glm::vec3(0.18f, 0.24f, 0.35f),
@@ -62,29 +61,34 @@ void PlayState::onEnter()
 
 void PlayState::update(float deltaTime)
 {
-    //TODO Wrap around, add to a object.update(deltaTime)
-    m_playerObject.m_animationTime += deltaTime;
-
-    // Do Camera movement, later on this will be moving a player object that the camera is attached to
-    mCamera->move(App::get()->getInput()->getMovement() * deltaTime * 10.0f);
-    if (App::get()->getInput()->getMouseButtonState(mouseButtons::LEFT) || App::get()->getInput()->getMouseButtonState(mouseButtons::RIGHT))
+    if (App::get()->getInput()->getMouseButtonState(mouseButtons::RIGHT))
     {
         App::get()->setMouseLock(true);
-        // TODO Mouse movement would need to rotate the player object too.
-        mCamera->mouseLook(App::get()->getInput()->getMouseMovement() * deltaTime);
-    } else
+        m_camera->mouseLook(App::get()->getInput()->getMouseMovement(), deltaTime);
+        m_playerObject.m_yaw = std::fmod(m_camera->getYaw() + 180.0f, 360.0f); //TODO Smooth this?
+    }
+    else
     {
         App::get()->setMouseLock(false);
     }
 
-    //Hack for player height
-    mCamera->m_position.y = m_map->getHeight(mCamera->m_position.x, mCamera->m_position.z) + 1.8f;
+    //Player movement
+    //TODO Check we aren't using a menu or something?
+
+    m_camera->changeDistance(App::get()->getInput()->getMouseWheel());
 
     if (App::get()->getInput()->getAction(actions::MENU))
     {
         //TODO Save game request etc
         App::get()->quit();
     }
+
+
+    //m_playerObject.getInput();// Get requested movement
+    m_playerObject.m_position.y = m_map->getHeight(m_playerObject.m_position.x, m_playerObject.m_position.z);
+    //m_playerObject.checkCollision();// Check collisions that prevent movement, eg wall sliding
+    //m_playerObject.checkInteractions();// ??
+    m_playerObject.update(deltaTime); // Animations
 
     m_map->update(deltaTime);
 }
@@ -98,7 +102,7 @@ void PlayState::render()
 void PlayState::onExit()
 {
     App::get()->getSettings()->removeObserver(this);
-    delete mCamera;
+    delete m_camera;
 }
 
 void PlayState::onNotify(const std::string& message, const MyType newValue)
@@ -106,7 +110,7 @@ void PlayState::onNotify(const std::string& message, const MyType newValue)
     if (message == "RESOLUTION")
     {
         const auto resolution = std::get<glm::ivec2>(newValue);
-        mCamera->setPerspective(45.0f, resolution.x, resolution.y, 0.1f, 1000.0f);
+        m_camera->setPerspective(45.0f, resolution.x, resolution.y, 0.1f, 1000.0f);
     }
 }
 
@@ -120,9 +124,16 @@ void PlayState::drawHUD()
     // Create a simple window
     ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f));
     ImGui::Begin("Debug menu");
-    //ImGui::Text("Current time of day: %f", timeOfDay);
-    ImGui::Text("Camera position (x,y,z): %f %f %f", mCamera->m_position.x, mCamera->m_position.y,
-                mCamera->m_position.z);
+    ImGui::Text("Player position (x,y,z): %f %f %f", m_playerObject.m_position.x,
+                m_playerObject.m_position.y,
+                m_playerObject.m_position.z);
+
+    ImGui::Text("Player yaw: %f", m_playerObject.m_yaw);
+
+    ImGui::Text("Player velocity (x,y,z): %f %f %f", m_playerObject.m_velocity.x,
+                m_playerObject.m_velocity.y,
+                m_playerObject.m_velocity.z);
+
     ImGui::Text("Current language: %s", App::get()->getLanguage()->get("LANGUAGE").c_str());
     ImGui::End();
 
@@ -140,11 +151,13 @@ void PlayState::CompileShaders()
 void PlayState::RenderScene()
 {
     // Send the camera stuff to the GPU
-    m_viewStruct.view = mCamera->getViewMatrix();
-    m_viewStruct.projection = mCamera->getProjectionMatrix();
+    // TODOEvery frame or only when it changes?
+    m_viewStruct.view = m_camera->getViewMatrix(m_playerObject.m_position);
+    m_viewStruct.projection = m_camera->getProjectionMatrix();
 
     glBindBuffer(GL_UNIFORM_BUFFER, ubos[0]);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(viewStruct), &m_viewStruct);
+
 
     // Send lighting stuff to the GPU
     glBindBuffer(GL_UNIFORM_BUFFER, ubos[1]);

@@ -6,55 +6,63 @@
 
 Camera::Camera()
 {
-    m_position = glm::vec3(4.0f, 1.5f, 11.0f);
-    m_direction = glm::vec3(0.0f, 0.0f, -1.0f);//Not important for starting value
-    m_up = glm::vec3(0.0f, 1.0f, 0.0f);
-    pitch = 0.0f;
-    yaw = -90.0f; // Looking down Z axis
+    m_distance = 10.0f;
+    m_pitch = 0.0f;
+    m_yaw = 180.0f;
 }
 
-void Camera::setPerspective(const float fov, const int screenWidth, const int screenHeight, const float near, const float far)
+void Camera::setPerspective(const float fov, const int screenWidth, const int screenHeight, const float near,
+                            const float far)
 {
     const float aspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
     m_perspective = glm::perspectiveLH(glm::radians(fov), aspect, near, far);
 }
 
-glm::mat4 Camera::getViewMatrix() const
+glm::mat4 Camera::getViewMatrix(const glm::vec3& playerPosition)
 {
-    return glm::lookAtLH(m_position, m_position + m_direction, m_up);
+    const glm::vec3 cameraPosition = calculatePosition(playerPosition);
+    const glm::vec3 target = playerPosition + glm::vec3(0.0f, 1.8f, 0.0f);
+    constexpr auto up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    return glm::lookAtLH(cameraPosition, target, up);
 }
 
-glm::mat4 Camera::getProjectionMatrix() const
+glm::mat4 Camera::getProjectionMatrix()
 {
     return m_perspective;
 }
 
-void Camera::move(const glm::vec2 movement)
+void Camera::mouseLook(const glm::vec2 look, const float deltaTime)
 {
-    // Lets do forward/backward movement. Ignore the up/down so that we walk along the ground (instead of flying)
-    // TODO Dont ignore if flying
-    m_position += glm::vec3(m_direction.x, m_direction.y, m_direction.z) * movement.y;
-
-    // Let's do strafing!
-    const glm::vec3 rightVector = glm::cross(m_direction, m_up);
-    m_position -= rightVector * movement.x;
-}
-
-void Camera::mouseLook(glm::vec2 look)
-{
-    //TODO this is kinda jerky at this speed, need to fix smoothness
-    yaw -= look.x * 50.0f;// TODO Sensitivity setting for both axis
-    pitch += look.y * 50.0f;// TODO invert Y setting here
+    m_yaw += look.x * 100.0f * deltaTime; // TODO Sensitivity setting for both axis
+    m_pitch -= look.y * 100.0f * deltaTime; // TODO invert Y setting here
 
     // Clamp pitch to prevent flipping
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
+    if (m_pitch > 89.0f)
+        m_pitch = 89.0f;
+    if (m_pitch < -89.0f)
+        m_pitch = -89.0f;
 
-    glm::vec3 front;
-    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    front.y = sin(glm::radians(pitch));
-    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    m_direction = glm::normalize(front);
+    m_yaw = std::fmod(m_yaw, 360.0f);
+    if (m_yaw < 0.0f)
+    {
+        m_yaw += 360.0f;
+    }
+}
+
+void Camera::changeDistance(const float distance)
+{
+    m_distance = std::clamp(m_distance + distance, 0.1f, 50.0f);
+}
+
+glm::vec3 Camera::calculatePosition(const glm::vec3& playerPosition)
+{
+    glm::vec3 camera;
+    camera.x = m_distance * cos(glm::radians(m_pitch)) * sin(glm::radians(m_yaw));
+    camera.y = m_distance * sin(glm::radians(m_pitch));
+    camera.z = m_distance * cos(glm::radians(m_pitch)) * cos(glm::radians(m_yaw));
+
+    constexpr glm::vec3 eyeHeight = {0.0f, 1.8f, 0.0f};
+
+    return playerPosition + eyeHeight + camera;
 }

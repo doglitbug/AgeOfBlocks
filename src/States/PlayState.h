@@ -6,6 +6,7 @@
 #include "World/map.h"
 #include "World/Characters/ObjectAnimated.h"
 #include "Observers.h"
+#include "World/Characters/Player.h"
 
 class PlayState: public BaseState, IObserver
 {
@@ -18,7 +19,7 @@ public:
     void onNotify(const std::string &message, MyType newValue) override;
 
 private:
-    Camera* mCamera = nullptr;
+    Camera* m_camera = nullptr;
     void toggleMouseLock();
     void drawHUD();
 
@@ -32,7 +33,7 @@ private:
     void CompileShaders();
     void RenderScene();
 
-    ObjectAnimated m_playerObject;
+    Player m_playerObject;
 
     map *m_map;
 

@@ -103,7 +103,6 @@ void App::init()
 void App::handleEvents()
 {
     SDL_Event event;
-    //TODO Check this is needed
     m_pInput->resetMouseMovement();
 
     while (SDL_PollEvent(&event))

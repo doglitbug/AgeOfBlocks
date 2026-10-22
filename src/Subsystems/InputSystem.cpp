@@ -53,6 +53,9 @@ void InputSystem::update(const SDL_Event& event)
         onMouseButtonChange(event);
         break;
 
+    case SDL_EVENT_MOUSE_WHEEL:
+        onMouseWheelChange(event);
+
     case SDL_EVENT_KEY_DOWN:
     case SDL_EVENT_KEY_UP:
         onKeyChange();
@@ -70,7 +73,7 @@ void InputSystem::clean() const
     }
 }
 
-glm::vec2 InputSystem::getMovement() const
+glm::vec2 InputSystem::getMovement()
 {
     glm::vec2 newVelocity(0.0f, 0.0f);
 
@@ -82,6 +85,11 @@ glm::vec2 InputSystem::getMovement() const
     {
         newVelocity.y = -1.0f;
     }
+    if (getMouseButtonState(mouseButtons::LEFT) && getMouseButtonState(mouseButtons::RIGHT))
+    {
+        newVelocity.y = 1.0f;
+    }
+
 
     if (getAction(actions::STRAFE_LEFT))
     {
@@ -105,10 +113,15 @@ glm::vec2 InputSystem::getMouseMovement() const
     return m_mouseMovement;
 }
 
+float InputSystem::getMouseWheel() const
+{
+    return m_mouseWheel;
+}
+
 bool InputSystem::getAction(const actions action) const
 {
     const auto& keyboard = App::get()->getSettings()->m_keyboard;
-    const auto& gamepad  = App::get()->getSettings()->m_gamepad;
+    const auto& gamepad = App::get()->getSettings()->m_gamepad;
 
     return getKeyDown(keyboard.get(action)) || getButtonDown(gamepad.get(action));
 }
@@ -167,6 +180,7 @@ bool InputSystem::getMouseButtonState(mouseButtons buttonNumber)
 void InputSystem::resetMouseMovement()
 {
     m_mouseMovement = {0.0f, 0.0f};
+    m_mouseWheel = 0.0f;
 }
 
 glm::vec2 InputSystem::getMousePosition() const
@@ -219,4 +233,9 @@ void InputSystem::onMouseButtonChange(const SDL_Event& event)
     default:
         break;
     }
+}
+
+void InputSystem::onMouseWheelChange(const SDL_Event& event)
+{
+    m_mouseWheel = -event.wheel.y;
 }

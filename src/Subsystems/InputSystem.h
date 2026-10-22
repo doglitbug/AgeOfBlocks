@@ -25,7 +25,7 @@ public:
     void clean() const;
 
     /// @return Normalized movement vector based on user input
-    [[nodiscard]] glm::vec2 getMovement() const;
+    [[nodiscard]] glm::vec2 getMovement();
 
     /// @brief See if the action is currently being performed via keyboard/controller
     /// @param action actions.MENU/ATTACK etc
@@ -55,14 +55,17 @@ public:
     void resetMouseMovement();
     [[nodiscard]] glm::vec2 getMousePosition() const;
     [[nodiscard]] glm::vec2 getMouseMovement() const;
+    float getMouseWheel() const;
 
 private:
     // Mouse
     glm::vec2 m_mousePosition;
     glm::vec2 m_mouseMovement;
     std::vector<bool> m_mouseButtonStates;
+    float m_mouseWheel;
     void onMouseMove(const SDL_Event &event);
     void onMouseButtonChange(const SDL_Event &event);
+    void onMouseWheelChange(const SDL_Event &event);
 
     // Keyboard
     const bool *m_keyStates;

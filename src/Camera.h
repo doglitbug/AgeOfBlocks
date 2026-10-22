@@ -12,29 +12,22 @@ public:
     ~Camera() = default;
 
     void setPerspective(float fov, int screenWidth, int screenHeight, float near, float far);
-    glm::mat4 getViewMatrix() const;
-    glm::mat4 getProjectionMatrix() const;
+    glm::mat4 getViewMatrix(const glm::vec3& playerPosition);
+    glm::mat4 getProjectionMatrix();
 
-    /// @brief Move the camera along the x/y axis.
-    ///        Of course, if we were a RTS camera, it would be x/z axis!
-    ///        Will need to account for rotation?
-    ///        in future, this cameras position would be set by the object the camera is attached to and that object would deal with collisions
-    /// @param movement Movement vector
-    void move(glm::vec2 movement);
-
-    /// @brief Look around using mouse delta.
-    ///        This would probably one of the thumbsticks on a gamepad.
-    /// @param look Mouse movement delta
-    void mouseLook(glm::vec2 look);
-
-    //TODO Move this back to private once we follow player position
-    glm::vec3 m_position{};
+    void mouseLook(glm::vec2 look, float deltaTime);
+    void changeDistance(float distance);
+    float getYaw() { return m_yaw; };
 
 private:
-    glm::vec3 m_up{};
-    glm::vec3 m_direction{};
     glm::mat4x4 m_perspective{};
 
-    float pitch;
-    float yaw;
+    glm::vec3 calculatePosition(const glm::vec3& playerPosition);
+
+    // Distance from the player
+    float m_distance;
+    // Pitch (up/down)
+    float m_pitch;
+    // Yaw (rotation)
+    float m_yaw;
 };

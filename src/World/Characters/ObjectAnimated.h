@@ -47,14 +47,16 @@ public:
 
     // TODO move back to private and add accessor methods
     glm::vec3 m_position{};
-    glm::vec3 m_rotation{};
+    glm::vec3 m_rotation{};//TODO This needs to be removed, replaced with a yaw as we only rotate on the one axis anyway?
+    glm::vec3 m_velocity{};
+
     float m_scale = 1.0f;
     float m_animationTime = 0.0f;
 
     [[nodiscard]] glm::mat4 GetWorldMatrix() const;
 
     void GetBoneTransforms(std::vector<glm::mat4> &boneTransforms, float animationTime);
-private:
+protected:
     #define MAX_NUM_BONES_PER_VERTEX 4
 
     struct InternalMesh
