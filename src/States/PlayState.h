@@ -28,7 +28,7 @@ private:
     GLint gModelLocation;
     GLint gSamplerLocation;
 
-    Texture *pTexture;
+    Texture *pTexture; 
 
     void CompileShaders();
     void RenderScene();

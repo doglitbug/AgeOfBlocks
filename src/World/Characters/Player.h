@@ -1,16 +1,16 @@
 #pragma once
 #include "ObjectAnimated.h"
+#include "World/map.h"
 
 class Player : public ObjectAnimated
 {
 public:
     void update(float deltaTime);
-    void checkMapCollision(float deltaTime);
     float m_yaw = 0.0f;
+    void doPlayerMovement(float deltaTime);
+    void checkMapCollisions(float deltaTime, map& playerMap);
 
 private:
-    void doPlayerMovement(const float deltaTime);
     glm::vec3 getForwardVector();
     glm::vec3 getLeftVector();
-private:
 };

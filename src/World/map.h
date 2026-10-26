@@ -59,6 +59,20 @@ public:
         int owner;
     };
 
+    enum DynamicObjectType
+    {
+        VILLAGER
+    };
+
+    struct DynamicObject
+    {
+        uint32_t entityID;
+        glm::vec3 position;
+        DynamicObjectType type;
+        int health;
+        int owner;
+    };
+
     struct Tile
     {
         TerrainType terrain;
@@ -95,6 +109,11 @@ public:
 
 private:
     void loadTextures();
+    /// Generate a static object, add to array and return new ID
+    /// @param x grid position
+    /// @param z grid position
+    /// @param height
+    /// @return object ID
     uint32_t generateStatic(float x, float z, float height);
     siv::PerlinNoise perlin;
     void CreateTerrainMapTexture();

@@ -10,25 +10,42 @@ void Player::update(const float deltaTime)
     // TODO If y velocity < 0 then falling etc etc
 
     m_rotation.y = m_yaw;
-
-    doPlayerMovement(deltaTime);
-    checkMapCollision(deltaTime);
-}
-
-void Player::checkMapCollision(const float deltaTime)
-{
-    glm::vec3 newPosition = m_position + m_velocity;
-
-    //TODO
-    m_position = newPosition;
 }
 
 void Player::doPlayerMovement(const float deltaTime)
 {
     auto movement = App::get()->getInput()->getMovement();
     m_velocity = getForwardVector() * movement.y + getLeftVector() * movement.x;
-    m_velocity *= deltaTime * 4.0f;
+    m_velocity *= deltaTime * 4.0f; //TODO Run speed/walk speed
 }
+
+void Player::checkMapCollisions(float deltaTime, map& map)
+{
+    glm::vec3 newPosition = m_position + m_velocity * deltaTime;//Assume y = 0?
+    // Collision on X axis
+    if (m_velocity.x < 0)
+    {
+        if (!map.isWalkable(newPosition.x + m_hitBox->x, m_position.getY() + m_hitBox->y) ||
+            !m_pCollisionLayer.isWalkable(newPosition.getX() + m_hitBox->x,
+                                          m_position.getY() + m_hitBox->y + m_hitBox->h))
+        {
+            m_velocity.x = 0;
+        }
+    }
+    else if (m_velocity.x > 0)
+    {
+        if (!m_pCollisionLayer.isWalkable(newPosition.getX() + m_hitBox->x + m_hitBox->w,
+                                          m_position.getY() + m_hitBox->y) ||
+            !m_pCollisionLayer.isWalkable(newPosition.getX() + m_hitBox->x + m_hitBox->w,
+                                          m_position.getY() + m_hitBox->y + m_hitBox->h))
+        {
+            m_velocity.setX(0);
+        }
+    }
+
+    m_position += m_velocity;
+}
+
 glm::vec3 Player::getForwardVector()
 {
     glm::vec3 forward;

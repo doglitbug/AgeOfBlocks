@@ -32,7 +32,7 @@ void PlayState::onEnter()
     CompileShaders();
 
     m_playerObject.LoadMesh("assets/models/villager.gltf");
-    m_playerObject.m_position = glm::vec3(128.0f, 0.0f, 136.0f);
+    m_playerObject.m_position = glm::vec3(84.5f, 0.0f, 143.0f);
 
     // Only look this up once and save!
     gModelLocation = m_3dShaderProgram.getUniformLocation("model");
@@ -83,12 +83,11 @@ void PlayState::update(float deltaTime)
         App::get()->quit();
     }
 
-
-    //m_playerObject.getInput();// Get requested movement
     m_playerObject.m_position.y = m_map->getHeight(m_playerObject.m_position.x, m_playerObject.m_position.z);
-    //m_playerObject.checkCollision();// Check collisions that prevent movement, eg wall sliding
     //m_playerObject.checkInteractions();// ??
     m_playerObject.update(deltaTime); // Animations
+    m_playerObject.doPlayerMovement(deltaTime);
+    m_playerObject.checkMapCollisions(deltaTime, *m_map);
 
     m_map->update(deltaTime);
 }

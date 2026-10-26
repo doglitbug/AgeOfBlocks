@@ -59,6 +59,7 @@ void map::loadTextures()
 
 uint32_t map::generateStatic(float x, float z, float height)
 {
+    //TODO refactor this to return the static object, and caller add to array?
     //Place trees
     const auto treeChance = static_cast<float>(perlin.octave2D_01(x * 0.15, z * 0.15, 4));
     if (treeChance < 0.25)
@@ -153,6 +154,7 @@ void map::generateMap()
 
     m_grid.resize(m_size * m_size);
 
+    //Generate terrain
     for (int z = 0; z < m_size; ++z)
     {
         for (int x = 0; x < m_size; ++x)
@@ -168,10 +170,18 @@ void map::generateMap()
             //Sand
             if (height < 0.25f) terrain = SAND;
 
-            //Place objects
-            const uint32_t staticObject = generateStatic(x, z, height);
+            m_grid[z * m_size + x] = Tile(terrain, height, 0);
+        }
+    }
 
-            m_grid[z * m_size + x] = Tile(terrain, height, staticObject);
+    //Place statics (this is done after all heights on purpose!)
+    for (int z = 0; z < m_size; ++z)
+    {
+        for (int x = 0; x < m_size; ++x)
+        {
+            //Place objects
+            auto const height = getHeight(x + 0.5f, z + 0.5f);
+            m_grid[z * m_size + x].entityID = generateStatic(x, z, height);
         }
     }
 }
